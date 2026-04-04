@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { TeamAnalysisPanel } from "@/components/team-analysis-panel";
 import { TeamBuilderPanel } from "@/components/team-builder-panel";
 import { TeamManagementPanel } from "@/components/team-management-panel";
-import { loadTeamById } from "@/lib/dashboard-data";
+import { loadTeamAnalysis, loadTeamById } from "@/lib/dashboard-data";
 
 export default async function TeamDetailPage({
   params
@@ -12,6 +13,7 @@ export default async function TeamDetailPage({
 }) {
   const { teamId } = await params;
   const team = await loadTeamById(teamId);
+  const analysis = await loadTeamAnalysis(teamId);
 
   if (!team) {
     notFound();
@@ -94,6 +96,8 @@ export default async function TeamDetailPage({
         </section>
 
         <TeamBuilderPanel team={team} />
+
+        {analysis ? <TeamAnalysisPanel analysis={analysis} /> : null}
 
         <TeamManagementPanel mode="edit" team={team} />
       </div>

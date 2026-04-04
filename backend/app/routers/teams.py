@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Response
 
 from app.models.schemas import (
+    TeamAnalysisResponse,
     ShowdownImportRequest,
     ShowdownImportResponse,
     TeamCreateRequest,
     TeamResponse,
     TeamUpdateRequest,
 )
+from app.services.team_analysis import build_team_analysis
 from app.services.showdown_parser import parse_showdown_team
 from app.services.team_store import (
     create_team,
@@ -28,6 +30,12 @@ def get_teams() -> list[TeamResponse]:
 @router.get("/{team_id}", response_model=TeamResponse)
 def get_team_by_id(team_id: str) -> TeamResponse:
     return TeamResponse.model_validate(get_team(team_id))
+
+
+@router.get("/{team_id}/analysis", response_model=TeamAnalysisResponse)
+def get_team_analysis(team_id: str) -> TeamAnalysisResponse:
+    team = TeamResponse.model_validate(get_team(team_id))
+    return build_team_analysis(team)
 
 
 @router.post("", response_model=TeamResponse)

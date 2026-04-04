@@ -42,18 +42,16 @@ Build a Dockerized web app for Pokemon VGC that lets a user:
 - Shared master plan document added and designated as a tracked markdown file
 - Chip-style editing added for team member types and move lists
 - Builder validation added for incomplete slots, duplicate species, and move/type limits
+- First deterministic team analysis endpoint added for saved teams
+- Team detail pages now surface structural analysis results from the API
 
 ### In Progress
 
-- Turning saved teams into editable team compositions rather than metadata-only shells
-- Preparing the six-slot builder flow so imported teams and blank teams can be edited in the same workspace
-- First pass of member-level team editing is now implemented for saved teams
-- Dynamic web-loaded Pokemon sprite previews are now wired into the builder
 - Builder UX polish is underway so editing feels closer to a real drafting workflow
+- Expanding the deterministic analysis engine beyond the first structural pass
 
 ### Not Started
 
-- Team member editing inside saved teams
 - Type/role/synergy analysis engine
 - Meta snapshot persistence and admin workflow
 - Compare-vs-meta workflow using saved teams
@@ -75,6 +73,7 @@ Build a Dockerized web app for Pokemon VGC that lets a user:
 - See inline validation feedback for invalid or conflicting slot data
 - Parse Showdown exports
 - Save imported Showdown teams
+- Load deterministic structural analysis on each saved team detail page
 - Run app in Docker
 - Search teams from the top navigation search form
 - Navigate between dashboard, teams, analysis, meta, and testing routes
@@ -112,9 +111,19 @@ Tasks:
 - support empty slots and draft states
 - allow imported teams to be refined after save
 
+Progress:
+
+- metadata CRUD is complete
+- six-slot editing is live
+- chip-style move/type editing is live
+- dynamic sprite previews are live
+- first-pass validation is live
+
 ## Phase 3: Analysis Engine
 
 Goal: provide deterministic recommendations and weakness reports.
+
+Status: in progress
 
 Tasks:
 
@@ -124,6 +133,12 @@ Tasks:
 - offensive and defensive profile notes
 - pivot/redirection/disruption support checks
 - recommendation output for common structural issues
+
+Progress:
+
+- saved teams now have a deterministic analysis endpoint
+- team detail pages now render structural readouts
+- current analysis includes type stacking, defensive buckets, speed-control checks, utility checks, and practical recommendations
 
 ## Phase 4: Meta Comparison
 
@@ -165,17 +180,17 @@ Tasks:
 
 ## Immediate Next Steps
 
-1. Finish the remaining builder polish around species/forms and ergonomics.
-2. Start the first deterministic analysis pass.
-3. Surface the analysis results on the saved team detail page.
-4. Expand analysis coverage before moving into meta snapshot persistence.
+1. Keep polishing builder ergonomics around species/forms and slot editing flow.
+2. Expand the analysis engine with richer role and matchup heuristics.
+3. Feed analysis outputs into the dedicated Analysis page as well as team detail pages.
+4. Start the meta snapshot persistence layer once the analysis model feels solid.
 
 ## Last Updated Snapshot
 
-- Current active milestone: Team Builder
-- Last completed milestone: Foundation plus saved-team persistence
-- Current progress: six-slot member editing, dynamic sprite loading, chip-style move/type editing, and first-pass validation are live for saved teams
-- Current next recommendation: begin the deterministic analysis engine and wire its output into the team detail workflow
+- Current active milestone: Analysis Engine
+- Last completed milestone: Team Builder
+- Current progress: saved teams support six-slot editing, dynamic sprite loading, chip-style move/type editing, validation, and first-pass deterministic structural analysis
+- Current next recommendation: deepen the analysis model and begin reusing it across the dedicated analysis experience
 
 ## Notes
 

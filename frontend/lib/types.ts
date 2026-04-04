@@ -45,3 +45,35 @@ export type DashboardData = {
   recommendations: string[];
   metaTeams: MetaTeam[];
 };
+
+export type AnalysisMetric = {
+  label: string;
+  score: number;
+  grade: string;
+  summary: string;
+};
+
+export type TypePressure = {
+  type: string;
+  weak_count: number;
+  resist_count: number;
+  immune_count: number;
+};
+
+export type CoverageCheck = {
+  label: string;
+  status: string;
+  detail: string;
+};
+
+export type TeamAnalysis = {
+  team_id: string;
+  filled_slots: number;
+  metrics: AnalysisMetric[];
+  shared_weaknesses: TypePressure[];
+  defensive_benchmarks: TypePressure[];
+  coverage_checks: CoverageCheck[];
+  strengths: string[];
+  warnings: string[];
+  recommendations: string[];
+};

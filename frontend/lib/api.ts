@@ -1,4 +1,4 @@
-import { DashboardData, PokemonSlot, Team } from "./types";
+import { DashboardData, PokemonSlot, Team, TeamAnalysis } from "./types";
 
 const API_BASE_URL =
   process.env.API_BASE_URL ??
@@ -35,6 +35,18 @@ export async function getTeam(teamId: string): Promise<Team> {
 
   if (!response.ok) {
     throw new Error("Failed to load team");
+  }
+
+  return response.json();
+}
+
+export async function getTeamAnalysis(teamId: string): Promise<TeamAnalysis> {
+  const response = await fetch(`${API_BASE_URL}/teams/${teamId}/analysis`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load team analysis");
   }
 
   return response.json();
