@@ -1,0 +1,81 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0");
+@import "tailwindcss";
+
+:root {
+  --background: #f7f9fc;
+  --surface: #f7f9fc;
+  --surface-bright: #f7f9fc;
+  --surface-dim: #d8dadd;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f2f4f7;
+  --surface-container: #eceef1;
+  --surface-container-high: #e6e8eb;
+  --surface-container-highest: #e0e3e6;
+  --surface-variant: #e0e3e6;
+  --outline: #946e67;
+  --outline-variant: #eabcb3;
+  --on-surface: #191c1e;
+  --on-surface-variant: #5f3f39;
+  --primary: #b81400;
+  --primary-container: #e61b00;
+  --secondary: #0061a5;
+  --secondary-fixed: #d2e4ff;
+  --secondary-container: #73b4ff;
+  --tertiary: #745b00;
+  --tertiary-container: #d1a600;
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-primary: #ffffff;
+  --inverse-surface: #2d3133;
+  --inverse-on-surface: #eff1f4;
+  --shadow-card: 0 18px 46px rgba(25, 28, 30, 0.08);
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top right, rgba(230, 27, 0, 0.08), transparent 24%),
+    linear-gradient(180deg, #fcfdff 0%, #f7f9fc 40%, #eef2f7 100%);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.font-headline {
+  font-family: var(--font-headline);
+}
+
+.font-label {
+  font-family: var(--font-label);
+}
+
+.card-shadow {
+  box-shadow: var(--shadow-card);
+}
+
+.glass-header {
+  backdrop-filter: blur(20px);
+}
