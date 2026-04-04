@@ -1,0 +1,185 @@
+# VGC Dashboard Master Plan
+
+This is the living build plan for the Pokemon VGC dashboard. It should be updated whenever scope changes, a feature moves forward, or priorities shift.
+
+## Product Goal
+
+Build a Dockerized web app for Pokemon VGC that lets a user:
+
+- save and manage multiple teams
+- import teams from Pokemon Showdown
+- analyze team weaknesses and role gaps
+- compare saved teams against current meta snapshots
+- generate matchup plans for common teams and archetypes
+- later run automated battle simulations in the background
+
+## Current Stack
+
+- Frontend: Next.js App Router + Tailwind CSS
+- Backend: FastAPI
+- Database: PostgreSQL
+- Runtime: Docker Compose
+
+## Current Status
+
+### Completed
+
+- Git repository initialized
+- Dockerized full-stack scaffold created
+- Stitch-inspired routed UI shell created
+- Real app routes added for dashboard, teams, analysis, meta, and testing
+- Dashboard wired to API-backed data
+- Showdown import parser endpoint implemented
+- Showdown import UI implemented
+- PostgreSQL team storage added
+- Seed teams loaded into database at startup
+- Team list and team detail pages wired to persisted data
+- Team CRUD for metadata added
+  - create blank team
+  - edit team metadata
+  - delete team
+- Showdown import can now save directly into persisted teams
+- Shared master plan document added and designated as a tracked markdown file
+- Chip-style editing added for team member types and move lists
+- Builder validation added for incomplete slots, duplicate species, and move/type limits
+
+### In Progress
+
+- Turning saved teams into editable team compositions rather than metadata-only shells
+- Preparing the six-slot builder flow so imported teams and blank teams can be edited in the same workspace
+- First pass of member-level team editing is now implemented for saved teams
+- Dynamic web-loaded Pokemon sprite previews are now wired into the builder
+- Builder UX polish is underway so editing feels closer to a real drafting workflow
+
+### Not Started
+
+- Team member editing inside saved teams
+- Type/role/synergy analysis engine
+- Meta snapshot persistence and admin workflow
+- Compare-vs-meta workflow using saved teams
+- Matchup plan generation
+- Background battle simulator
+
+## Working Features Right Now
+
+- View dashboard
+- View saved teams
+- Open team detail pages
+- Create blank teams
+- Edit team metadata
+- Delete teams
+- Edit up to six team slots on a saved team
+- See dynamic Pokemon sprite previews in the builder based on species names
+- Clear individual team slots in the builder
+- Edit moves and types using chip-style inputs instead of comma-only text fields
+- See inline validation feedback for invalid or conflicting slot data
+- Parse Showdown exports
+- Save imported Showdown teams
+- Run app in Docker
+- Search teams from the top navigation search form
+- Navigate between dashboard, teams, analysis, meta, and testing routes
+
+## Build Phases
+
+## Phase 1: Foundation
+
+Goal: establish a usable product shell with real routing and persistence.
+
+Status: complete for the initial scaffold milestone
+
+Included:
+
+- Dockerized frontend, backend, and database
+- Routed dashboard UI
+- Showdown import parser
+- Team persistence
+- Team CRUD for metadata
+- Shared master planning document
+
+## Phase 2: Team Builder
+
+Goal: make saved teams truly editable.
+
+Status: next priority
+
+Tasks:
+
+- add/edit/remove team members
+- create six-slot team builder layout
+- edit item, ability, role, tera type, and move list per member
+- polish validation and editing feedback in the builder
+- improve form and species/form handling
+- support empty slots and draft states
+- allow imported teams to be refined after save
+
+## Phase 3: Analysis Engine
+
+Goal: provide deterministic recommendations and weakness reports.
+
+Tasks:
+
+- type overlap and weakness aggregation
+- speed control coverage
+- role coverage checks
+- offensive and defensive profile notes
+- pivot/redirection/disruption support checks
+- recommendation output for common structural issues
+
+## Phase 4: Meta Comparison
+
+Goal: compare saved teams against dated format snapshots.
+
+Tasks:
+
+- create format and meta snapshot tables
+- store dated top-team snapshots
+- surface common threats and archetypes
+- compare a selected team to snapshot teams
+- highlight pressure points and exposed slots
+
+## Phase 5: Matchup Planning
+
+Goal: generate practical game plans using the saved team and meta data.
+
+Tasks:
+
+- lead suggestions
+- preserve targets and win-condition notes
+- danger checklist
+- matchup summaries against common archetypes
+- matchup summaries against top stored teams
+
+## Phase 6: Simulation
+
+Goal: add the deferred battle simulator without forcing a rewrite.
+
+Status: explicitly deferred until core product is complete
+
+Tasks:
+
+- worker service in Docker
+- queued simulation jobs
+- repeated matchup runs
+- stored win/loss summaries
+- recurring weakness reporting
+
+## Immediate Next Steps
+
+1. Finish the remaining builder polish around species/forms and ergonomics.
+2. Start the first deterministic analysis pass.
+3. Surface the analysis results on the saved team detail page.
+4. Expand analysis coverage before moving into meta snapshot persistence.
+
+## Last Updated Snapshot
+
+- Current active milestone: Team Builder
+- Last completed milestone: Foundation plus saved-team persistence
+- Current progress: six-slot member editing, dynamic sprite loading, chip-style move/type editing, and first-pass validation are live for saved teams
+- Current next recommendation: begin the deterministic analysis engine and wire its output into the team detail workflow
+
+## Notes
+
+- Meta data should be snapshot-based and dated, not hardcoded as universally current.
+- When move recommendations and suggested sets are added, Smogon should be used as the primary moveset reference source.
+- The battle simulator remains a later-phase feature by design.
+- This document is intended to stay concise and operational rather than become a design essay.

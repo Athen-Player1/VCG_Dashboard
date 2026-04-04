@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type ParsedPokemon = {
@@ -42,16 +43,19 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 export function ShowdownImportPanel() {
+  const router = useRouter();
   const [teamName, setTeamName] = useState("Ladder Prep");
   const [format, setFormat] = useState("Regulation H");
   const [showdownText, setShowdownText] = useState(starterImport);
   const [parsed, setParsed] = useState<ImportResponse | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("idle");
   const [error, setError] = useState("");
+  const [savedTeamId, setSavedTeamId] = useState<string | null>(null);
 
   async function handleImport() {
     setStatus("loading");
     setError("");
+    setSavedTeamId(null);
 
     try {
       const response = await fetch(`${API_BASE_URL}/teams/import-showdown`, {
@@ -76,6 +80,37 @@ export function ShowdownImportPanel() {
     } catch (caughtError) {
       setStatus("error");
       setError(caughtError instanceof Error ? caughtError.message : "Import failed");
+    }
+  }
+
+  async function handleSave() {
+    setStatus("saving");
+    setError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/teams/import-showdown/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: teamName,
+          format,
+          showdown_text: showdownText
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Save failed");
+      }
+
+      const data = await response.json();
+      setSavedTeamId(data.id);
+      setStatus("idle");
+      router.refresh();
+    } catch (caughtError) {
+      setStatus("error");
+      setError(caughtError instanceof Error ? caughtError.message : "Save failed");
     }
   }
 
@@ -128,11 +163,19 @@ export function ShowdownImportPanel() {
       <div className="mt-4 flex items-center gap-3">
         <button
           className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-5 py-3 font-headline text-sm font-bold text-white disabled:cursor-wait disabled:opacity-70"
-          disabled={status === "loading"}
+          disabled={status === "loading" || status === "saving"}
           onClick={handleImport}
           type="button"
         >
           {status === "loading" ? "Parsing..." : "Parse Showdown Team"}
+        </button>
+        <button
+          className="rounded-2xl bg-[var(--secondary-fixed)] px-5 py-3 font-headline text-sm font-bold text-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={!parsed || status === "loading" || status === "saving"}
+          onClick={handleSave}
+          type="button"
+        >
+          {status === "saving" ? "Saving..." : "Save Imported Team"}
         </button>
         {error ? (
           <p className="text-sm font-semibold text-[var(--error)]">{error}</p>
@@ -185,12 +228,21 @@ export function ShowdownImportPanel() {
             ))}
           </div>
           <div className="mt-5 flex gap-3">
-            <Link
-              className="rounded-xl bg-[var(--secondary-fixed)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)]"
-              href="/teams"
-            >
-              View Teams Workspace
-            </Link>
+            {savedTeamId ? (
+              <Link
+                className="rounded-xl bg-[var(--secondary-fixed)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)]"
+                href={`/teams/${savedTeamId}`}
+              >
+                Open Saved Team
+              </Link>
+            ) : (
+              <Link
+                className="rounded-xl bg-[var(--secondary-fixed)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)]"
+                href="/teams"
+              >
+                View Teams Workspace
+              </Link>
+            )}
             <Link
               className="rounded-xl bg-[var(--surface-container-lowest)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--primary)]"
               href="/analysis"

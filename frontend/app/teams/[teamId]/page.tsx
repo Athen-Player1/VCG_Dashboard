@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { TeamBuilderPanel } from "@/components/team-builder-panel";
+import { TeamManagementPanel } from "@/components/team-management-panel";
 import { loadTeamById } from "@/lib/dashboard-data";
 
 export default async function TeamDetailPage({
@@ -90,6 +92,10 @@ export default async function TeamDetailPage({
             </article>
           ))}
         </section>
+
+        <TeamBuilderPanel team={team} />
+
+        <TeamManagementPanel mode="edit" team={team} />
       </div>
     </AppShell>
   );

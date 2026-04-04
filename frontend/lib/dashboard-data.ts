@@ -1,4 +1,4 @@
-import { getDashboardData } from "./api";
+import { getDashboardData, getTeam } from "./api";
 import { DashboardData, Team } from "./types";
 
 export const fallbackData: DashboardData = {
@@ -217,6 +217,10 @@ export async function loadDashboardData(): Promise<DashboardData> {
 }
 
 export async function loadTeamById(teamId: string): Promise<Team | undefined> {
-  const data = await loadDashboardData();
-  return data.teams.find((team) => team.id === teamId);
+  try {
+    return await getTeam(teamId);
+  } catch {
+    const data = await loadDashboardData();
+    return data.teams.find((team) => team.id === teamId);
+  }
 }

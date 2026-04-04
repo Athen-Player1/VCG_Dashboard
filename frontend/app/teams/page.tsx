@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ShowdownImportPanel } from "@/components/showdown-import-panel";
+import { TeamManagementPanel } from "@/components/team-management-panel";
 import { loadDashboardData } from "@/lib/dashboard-data";
 
 export default async function TeamsPage({
@@ -59,9 +60,7 @@ export default async function TeamsPage({
         </div>
 
         {params.compose ? (
-          <div className="rounded-[1.25rem] border border-[var(--outline-variant)] bg-white px-5 py-4 text-sm text-[var(--on-surface-variant)] shadow-sm">
-            Draft mode is queued here for the upcoming builder flow. For now, start with the Showdown import lab below or open an existing team.
-          </div>
+          <TeamManagementPanel mode="create" />
         ) : null}
 
         <section className="grid gap-6 md:grid-cols-2">
