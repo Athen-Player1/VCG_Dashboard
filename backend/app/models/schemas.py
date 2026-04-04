@@ -137,6 +137,18 @@ class MetaSnapshotResponse(BaseModel):
     metaTeams: list[MetaTeamResponse] = Field(default_factory=list)
 
 
+class MetaSnapshotCreateRequest(BaseModel):
+    id: str = Field(min_length=1, max_length=120)
+    format: str = Field(min_length=1, max_length=120)
+    source: str = Field(min_length=1, max_length=120)
+    snapshotDate: str = Field(min_length=10, max_length=10)
+    active: bool = False
+    weaknessSummary: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    threats: list[ThreatResponse] = Field(default_factory=list)
+    metaTeams: list[MetaTeamResponse] = Field(default_factory=list)
+
+
 class MatchupSummaryResponse(BaseModel):
     meta_team_id: str
     meta_team_name: str

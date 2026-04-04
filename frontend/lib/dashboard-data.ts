@@ -1,6 +1,7 @@
 import {
   getActiveMetaSnapshot,
   getDashboardData,
+  getMetaSnapshots,
   getTeam,
   getTeamAnalysis,
   getTeamMetaMatchups
@@ -244,6 +245,14 @@ export async function loadActiveMetaSnapshot(): Promise<MetaSnapshot | undefined
     return await getActiveMetaSnapshot();
   } catch {
     return undefined;
+  }
+}
+
+export async function loadMetaSnapshots(): Promise<MetaSnapshot[]> {
+  try {
+    return await getMetaSnapshots();
+  } catch {
+    return [];
   }
 }
 

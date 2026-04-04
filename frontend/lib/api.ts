@@ -83,6 +83,46 @@ export async function getTeamMetaMatchups(teamId: string): Promise<MatchupSummar
   return response.json();
 }
 
+export async function getMetaSnapshots(): Promise<MetaSnapshot[]> {
+  const response = await fetch(`${API_BASE_URL}/meta/snapshots`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load meta snapshots");
+  }
+
+  return response.json();
+}
+
+export async function createMetaSnapshot(payload: MetaSnapshot): Promise<MetaSnapshot> {
+  const response = await fetch(`${API_BASE_URL}/meta/snapshots`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create meta snapshot");
+  }
+
+  return response.json();
+}
+
+export async function activateMetaSnapshot(snapshotId: string): Promise<MetaSnapshot> {
+  const response = await fetch(`${API_BASE_URL}/meta/snapshots/${snapshotId}/activate`, {
+    method: "POST"
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to activate meta snapshot");
+  }
+
+  return response.json();
+}
+
 type TeamMutationPayload = {
   name: string;
   format: string;

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { MatchupSummaryPanel } from "@/components/matchup-summary-panel";
+import { SnapshotManagementPanel } from "@/components/snapshot-management-panel";
 import {
   loadActiveMetaSnapshot,
   loadDashboardData,
+  loadMetaSnapshots,
   loadTeamById,
   loadTeamMetaMatchups
 } from "@/lib/dashboard-data";
@@ -16,6 +18,7 @@ export default async function MetaPage({
   const data = await loadDashboardData();
   const params = (await searchParams) ?? {};
   const activeSnapshot = await loadActiveMetaSnapshot();
+  const snapshots = await loadMetaSnapshots();
   const selectedTeamId = params.team;
   const selectedTeam = selectedTeamId ? await loadTeamById(selectedTeamId) : undefined;
   const matchupSummaries =
@@ -182,6 +185,8 @@ export default async function MetaPage({
             ))}
           </div>
         </section>
+
+        <SnapshotManagementPanel snapshots={snapshots} />
       </div>
     </AppShell>
   );

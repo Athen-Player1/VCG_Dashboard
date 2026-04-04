@@ -3,9 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from fastapi import HTTPException
+from psycopg.errors import UniqueViolation
 
 from app.data.sample_data import dashboard_data
 from app.db import get_db_connection, serialize_json
+from app.models.schemas import MetaSnapshotCreateRequest
 
 
 @dataclass(frozen=True)
@@ -116,5 +118,75 @@ def get_active_meta_snapshot() -> dict:
 
     if row is None:
         raise HTTPException(status_code=404, detail="No active meta snapshot found")
+
+    return _normalize_snapshot(row)
+
+
+def create_meta_snapshot(payload: MetaSnapshotCreateRequest) -> dict:
+    with get_db_connection() as connection:
+        with connection.cursor() as cursor:
+            if payload.active:
+                cursor.execute("UPDATE meta_snapshots SET active = FALSE, updated_at = NOW()")
+
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO meta_snapshots (
+                        id,
+                        format,
+                        source,
+                        snapshot_date,
+                        active,
+                        weakness_summary,
+                        recommendations,
+                        threats,
+                        meta_teams,
+                        updated_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s::jsonb, NOW())
+                    RETURNING id, format, source, snapshot_date, active, weakness_summary,
+                              recommendations, threats, meta_teams
+                    """,
+                    (
+                        payload.id,
+                        payload.format,
+                        payload.source,
+                        payload.snapshotDate,
+                        payload.active,
+                        serialize_json(payload.weaknessSummary),
+                        serialize_json(payload.recommendations),
+                        serialize_json([threat.model_dump() for threat in payload.threats]),
+                        serialize_json([meta_team.model_dump() for meta_team in payload.metaTeams]),
+                    ),
+                )
+            except UniqueViolation as exc:
+                raise HTTPException(status_code=409, detail="Snapshot id already exists") from exc
+
+            row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=500, detail="Failed to create snapshot")
+
+    return _normalize_snapshot(row)
+
+
+def activate_meta_snapshot(snapshot_id: str) -> dict:
+    with get_db_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("UPDATE meta_snapshots SET active = FALSE, updated_at = NOW()")
+            cursor.execute(
+                """
+                UPDATE meta_snapshots
+                SET active = TRUE, updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, format, source, snapshot_date, active, weakness_summary,
+                          recommendations, threats, meta_teams
+                """,
+                (snapshot_id,),
+            )
+            row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
 
     return _normalize_snapshot(row)
