@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSimulationJob, getSimulationJobs } from "@/lib/api";
-import { MetaSnapshot, SimulationJob, Team } from "@/lib/types";
+import { createSimulationJob, getSimulationJobs, validateShowdownTeam } from "@/lib/api";
+import { MetaSnapshot, ShowdownValidation, SimulationJob, Team } from "@/lib/types";
 
 function statusBadge(status: SimulationJob["status"]) {
   if (status === "completed") {
@@ -32,7 +32,10 @@ export function SimulationControlPanel({
   const [opponentMode, setOpponentMode] = useState<"top_meta" | "input_team">("top_meta");
   const [showdownText, setShowdownText] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [validationStatus, setValidationStatus] = useState<"idle" | "checking" | "error">("idle");
   const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [validation, setValidation] = useState<ShowdownValidation | null>(null);
 
   const topMetaLabel = useMemo(
     () => activeSnapshot?.metaTeams[0]?.name ?? "No active meta team available",
@@ -80,6 +83,25 @@ export function SimulationControlPanel({
     } catch (caughtError) {
       setStatus("error");
       setError(caughtError instanceof Error ? caughtError.message : "Failed to launch simulation");
+    }
+  }
+
+  async function handleValidateOpponent() {
+    setValidationStatus("checking");
+    setValidationError("");
+
+    try {
+      const result = await validateShowdownTeam({
+        format: teams.find((team) => team.id === teamId)?.format ?? "Regulation H",
+        showdownText
+      });
+      setValidation(result);
+      setValidationStatus("idle");
+    } catch (caughtError) {
+      setValidationStatus("error");
+      setValidationError(
+        caughtError instanceof Error ? caughtError.message : "Failed to validate opponent team"
+      );
     }
   }
 
@@ -156,10 +178,60 @@ export function SimulationControlPanel({
               </label>
               <textarea
                 className="mt-2 min-h-52 w-full rounded-2xl border border-[var(--outline-variant)] bg-[var(--surface-container-low)] p-4 font-mono text-xs outline-none focus:border-[var(--secondary)]"
-                onChange={(event) => setShowdownText(event.target.value)}
+                onChange={(event) => {
+                  setShowdownText(event.target.value);
+                  setValidation(null);
+                  setValidationError("");
+                }}
                 placeholder={"Incineroar @ Sitrus Berry\nAbility: Intimidate\n- Fake Out\n- Parting Shot"}
                 value={showdownText}
               />
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  className="rounded-xl bg-[var(--secondary-fixed)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={validationStatus === "checking" || !showdownText.trim()}
+                  onClick={handleValidateOpponent}
+                  type="button"
+                >
+                  {validationStatus === "checking" ? "Checking..." : "Validate Opponent"}
+                </button>
+                {validationError ? (
+                  <span className="text-sm font-semibold text-[var(--error)]">
+                    {validationError}
+                  </span>
+                ) : null}
+              </div>
+              {validation ? (
+                <div className="mt-4 rounded-2xl bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-[var(--on-surface)]">
+                      Resolved format: {validation.formatResolved}
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 font-label text-[10px] font-bold uppercase tracking-[0.18em] ${
+                        validation.valid
+                          ? "bg-[var(--secondary-fixed)] text-[var(--secondary)]"
+                          : "bg-[var(--error-container)] text-[var(--error)]"
+                      }`}
+                    >
+                      {validation.valid ? "Valid" : "Issues Found"}
+                    </span>
+                  </div>
+                  {validation.issues.length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {validation.issues.slice(0, 3).map((issue) => (
+                        <p key={issue} className="text-sm text-[var(--on-surface-variant)]">
+                          {issue}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-[var(--on-surface-variant)]">
+                      Showdown accepted the pasted opponent shell.
+                    </p>
+                  )}
+                </div>
+              ) : null}
             </div>
           ) : null}
 
