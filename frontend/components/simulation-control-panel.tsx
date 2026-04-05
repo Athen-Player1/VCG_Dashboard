@@ -131,7 +131,7 @@ export function SimulationControlPanel({
 
   return (
     <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-      <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+      <article id="launch-sims" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
         <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
           Phase 6 MVP
         </div>
@@ -282,7 +282,7 @@ export function SimulationControlPanel({
         </div>
       </article>
 
-      <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+      <article id="simulation-queue" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-headline text-2xl font-bold">Simulation Queue</h2>

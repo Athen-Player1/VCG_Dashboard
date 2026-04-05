@@ -20,33 +20,17 @@ export default async function TestingPage() {
   return (
     <AppShell activeSection="testing">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
-              Background Worker
-            </div>
-            <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-              Testing and Simulation
-            </h1>
-            <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
-              Run repeatable 10-game sim batches in the background so the app can surface observed
-              weakness patterns instead of only theory.
-            </p>
+        <div>
+          <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
+            Background Worker
           </div>
-          <div className="flex gap-3">
-            <Link
-              className="rounded-2xl bg-[var(--secondary-fixed)] px-5 py-3 font-headline text-sm font-bold text-[var(--secondary)]"
-              href="/meta"
-            >
-              Open Meta Desk
-            </Link>
-            <Link
-              className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white"
-              href="/teams"
-            >
-              Tune Teams
-            </Link>
-          </div>
+          <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+            Testing and Simulation
+          </h1>
+          <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
+            Run repeatable 10-game sim batches in the background so the app can surface observed
+            weakness patterns instead of only theory.
+          </p>
         </div>
 
         <section className="grid gap-6 lg:grid-cols-3">

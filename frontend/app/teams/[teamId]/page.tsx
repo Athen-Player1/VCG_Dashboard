@@ -20,37 +20,29 @@ export default async function TeamDetailPage({
   }
 
   return (
-    <AppShell activeSection="teams">
+    <AppShell
+      activeSection="teams"
+      pageNavigation={[
+        { href: `/teams/${team.id}`, label: `${team.name} Overview`, icon: "overview" },
+        { href: `/teams/${team.id}#team-builder`, label: "Builder", icon: "build" },
+        { href: `/teams/${team.id}#team-analysis`, label: "Analysis", icon: "analytics" },
+        { href: `/teams/${team.id}#team-settings`, label: "Settings", icon: "settings" }
+      ]}
+    >
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <Link
-              className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]"
-              href="/teams"
-            >
-              Back to Teams
-            </Link>
-            <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-              {team.name}
-            </h1>
-            <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
-              {team.format} • {team.archetype} • {team.notes}
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              className="rounded-2xl bg-[var(--secondary-fixed)] px-5 py-3 font-headline text-sm font-bold text-[var(--secondary)]"
-              href={`/analysis?team=${team.id}`}
-            >
-              Run Analysis
-            </Link>
-            <Link
-              className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white"
-              href={`/meta?team=${team.id}`}
-            >
-              Compare to Meta
-            </Link>
-          </div>
+        <div>
+          <Link
+            className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]"
+            href="/teams"
+          >
+            Back to Teams
+          </Link>
+          <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+            {team.name}
+          </h1>
+          <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
+            {team.format} • {team.archetype} • {team.notes}
+          </p>
         </div>
 
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -106,11 +98,15 @@ export default async function TeamDetailPage({
           ))}
         </section>
 
-        <TeamBuilderPanel team={team} />
+        <div id="team-builder">
+          <TeamBuilderPanel team={team} />
+        </div>
 
-        {analysis ? <TeamAnalysisPanel analysis={analysis} /> : null}
+        <div id="team-analysis">{analysis ? <TeamAnalysisPanel analysis={analysis} /> : null}</div>
 
-        <TeamManagementPanel mode="edit" team={team} />
+        <div id="team-settings">
+          <TeamManagementPanel mode="edit" team={team} />
+        </div>
       </div>
     </AppShell>
   );

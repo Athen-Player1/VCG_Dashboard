@@ -153,36 +153,21 @@ export function DashboardShell({ data }: { data: DashboardData }) {
 
   return (
     <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
-                Format snapshot
-              </div>
-              <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-                Team Architect Dashboard
-              </h1>
-              <p className="mt-3 max-w-2xl text-base text-[var(--on-surface-variant)]">
-                Save teams, import Showdown exports, compare into the current field, and build matchup plans around the lines you actually want to bring.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                className="rounded-2xl border border-[var(--outline-variant)] bg-white px-5 py-3 font-headline text-sm font-bold text-[var(--on-surface)] transition-colors hover:bg-[var(--surface-container-low)]"
-                href="/teams#import-lab"
-              >
-                Paste Showdown Team
-              </Link>
-              <Link
-                className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white shadow-lg shadow-red-200 transition-transform hover:-translate-y-0.5"
-                href="/teams?compose=1"
-              >
-                Build New Team
-              </Link>
-            </div>
-          </div>
+      <div className="mb-10">
+        <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
+          Format snapshot
+        </div>
+        <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+          Team Architect Dashboard
+        </h1>
+        <p className="mt-3 max-w-2xl text-base text-[var(--on-surface-variant)]">
+          Save teams, import Showdown exports, compare into the current field, and build matchup
+          plans around the lines you actually want to bring.
+        </p>
+      </div>
 
-          <div className="grid gap-8 xl:grid-cols-12">
-            <section className="space-y-8 xl:col-span-8">
+      <div className="grid gap-8 xl:grid-cols-12">
+        <section className="space-y-8 xl:col-span-8">
               {hasTeams && activeTeam ? (
                 <>
                   <TeamCard team={activeTeam} />
@@ -289,7 +274,7 @@ export function DashboardShell({ data }: { data: DashboardData }) {
 
               <ShowdownImportPanel />
 
-              <section className="rounded-[1.5rem] bg-[var(--surface-container-low)] p-8">
+              <section id="weakness-matrix" className="rounded-[1.5rem] bg-[var(--surface-container-low)] p-8">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <h2 className="font-headline text-2xl font-bold">Weakness Matrix</h2>
@@ -328,7 +313,7 @@ export function DashboardShell({ data }: { data: DashboardData }) {
                 </div>
               </section>
 
-              <section className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+              <section id="meta-team-plans" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <h2 className="font-headline text-2xl font-bold">Meta Team Plans</h2>
@@ -351,52 +336,49 @@ export function DashboardShell({ data }: { data: DashboardData }) {
               </section>
             </section>
 
-            <aside className="space-y-6 xl:col-span-4">
-              <div className="sticky top-24 space-y-6">
-                <ThreatPanel threats={data.threats} />
-                <section className="card-shadow rounded-[1.25rem] bg-white p-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-headline text-lg font-bold">Build Queue</h2>
-                    <span className="material-symbols-outlined text-[var(--outline)]">deployed_code</span>
-                  </div>
-                  <div className="mt-5 space-y-4">
-                    {[
-                      "Frontend shell adapted from Stitch references",
-                      "Showdown import parser endpoint connected",
-                      "Saved team persistence with PostgreSQL",
-                      "Meta snapshot admin workflow",
-                      "Simulation worker reserved for later phase"
-                    ].map((item, index) => (
-                      <div key={item} className="flex gap-3">
-                        <div className={`mt-1 h-3 w-3 rounded-full ${index < 2 ? "bg-emerald-500" : "bg-slate-300"}`} />
-                        <p className="text-sm leading-6 text-[var(--on-surface-variant)]">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="overflow-hidden rounded-[1.25rem] bg-gradient-to-br from-[var(--inverse-surface)] to-slate-800 p-6 text-[var(--inverse-on-surface)]">
-                  <div className="relative z-10">
-                    <div className="font-label text-[10px] uppercase tracking-[0.22em] text-slate-300">
-                      Meta Watch
-                    </div>
-                    <h2 className="mt-3 font-headline text-xl font-bold">
-                      Prioritize Ground and Speed Counterplay
-                    </h2>
-                    <p className="mt-3 text-sm leading-6 text-slate-200">
-                      Your current shell handles slower balance teams well, but repeated Ground pressure and faster special offense still force awkward defensive lines.
-                    </p>
-                    <Link
-                      className="mt-5 inline-flex rounded-xl bg-white/15 px-4 py-2.5 font-headline text-sm font-bold backdrop-blur-sm"
-                      href="/analysis"
-                    >
-                      Run Full Analysis
-                    </Link>
-                  </div>
-                </section>
+        <aside className="space-y-6 xl:col-span-4">
+          <div className="sticky top-24 space-y-6">
+            <section id="threat-radar">
+              <ThreatPanel threats={data.threats} />
+            </section>
+            <section className="card-shadow rounded-[1.25rem] bg-white p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="font-headline text-lg font-bold">Build Queue</h2>
+                <span className="material-symbols-outlined text-[var(--outline)]">deployed_code</span>
               </div>
-            </aside>
+              <div className="mt-5 space-y-4">
+                {[
+                  "Frontend shell adapted from Stitch references",
+                  "Showdown import parser endpoint connected",
+                  "Saved team persistence with PostgreSQL",
+                  "Meta snapshot admin workflow",
+                  "Simulation worker reserved for later phase"
+                ].map((item, index) => (
+                  <div key={item} className="flex gap-3">
+                    <div className={`mt-1 h-3 w-3 rounded-full ${index < 2 ? "bg-emerald-500" : "bg-slate-300"}`} />
+                    <p className="text-sm leading-6 text-[var(--on-surface-variant)]">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="overflow-hidden rounded-[1.25rem] bg-gradient-to-br from-[var(--inverse-surface)] to-slate-800 p-6 text-[var(--inverse-on-surface)]">
+              <div className="relative z-10">
+                <div className="font-label text-[10px] uppercase tracking-[0.22em] text-slate-300">
+                  Meta Watch
+                </div>
+                <h2 className="mt-3 font-headline text-xl font-bold">
+                  Prioritize Ground and Speed Counterplay
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-200">
+                  Your current shell handles slower balance teams well, but repeated Ground pressure
+                  and faster special offense still force awkward defensive lines.
+                </p>
+              </div>
+            </section>
           </div>
+        </aside>
+      </div>
     </div>
   );
 }

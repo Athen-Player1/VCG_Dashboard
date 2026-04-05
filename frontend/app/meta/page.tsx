@@ -40,43 +40,37 @@ export default async function MetaPage({
   };
 
   return (
-    <AppShell activeSection="meta">
+    <AppShell
+      activeSection="meta"
+      pageNavigation={
+        selectedTeam
+          ? [
+              {
+                href: `/meta?team=${selectedTeam.id}#team-matchups`,
+                label: `${selectedTeam.name} Matchups`,
+                icon: "strategy"
+              },
+              {
+                href: `/meta?team=${selectedTeam.id}#archetype-plans`,
+                label: "Archetype Plans",
+                icon: "group_work"
+              }
+            ]
+          : []
+      }
+    >
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
-              Format Snapshot
-            </div>
-            <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-              Meta Trends
-            </h1>
-            <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
-              Review the active stored snapshot, identify pressure points, and move from format
-              context into matchup planning.
-            </p>
+        <div>
+          <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
+            Format Snapshot
           </div>
-          <div className="flex gap-3">
-            {selectedTeam ? (
-              <Link
-                className="rounded-2xl bg-[var(--secondary-fixed)] px-5 py-3 font-headline text-sm font-bold text-[var(--secondary)]"
-                href={`/analysis?team=${selectedTeam.id}`}
-              >
-                Analyze {selectedTeam.name}
-              </Link>
-            ) : null}
-            <Link
-              className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white"
-              href="/analysis"
-            >
-              Open Analysis Desk
-            </Link>
-            <Link
-              className="rounded-2xl bg-white px-6 py-3 font-headline text-sm font-bold text-[var(--primary)] ring-1 ring-[var(--outline-variant)]"
-              href="/meta/top-teams"
-            >
-              Top 5 Teams
-            </Link>
-          </div>
+          <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+            Meta Trends
+          </h1>
+          <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
+            Review the active stored snapshot, identify pressure points, and move from format
+            context into matchup planning.
+          </p>
         </div>
 
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -115,7 +109,7 @@ export default async function MetaPage({
             ) : null}
           </article>
 
-          <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+          <article id="snapshot-guidance" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
             <h2 className="font-headline text-2xl font-bold">Snapshot Guidance</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {metaData.recommendations.map((item) => (
@@ -153,13 +147,17 @@ export default async function MetaPage({
           </section>
         ) : null}
 
-        {selectedTeam && matchupSummaries ? (
-          <MatchupSummaryPanel matchups={matchupSummaries} teamName={selectedTeam.name} />
-        ) : null}
+        <div id="team-matchups">
+          {selectedTeam && matchupSummaries ? (
+            <MatchupSummaryPanel matchups={matchupSummaries} teamName={selectedTeam.name} />
+          ) : null}
+        </div>
 
-        {selectedTeam && archetypeMatchups ? (
-          <ArchetypeMatchupPanel matchups={archetypeMatchups} teamName={selectedTeam.name} />
-        ) : null}
+        <div id="archetype-plans">
+          {selectedTeam && archetypeMatchups ? (
+            <ArchetypeMatchupPanel matchups={archetypeMatchups} teamName={selectedTeam.name} />
+          ) : null}
+        </div>
 
         <section className="grid gap-6 lg:grid-cols-2">
           {metaData.metaTeams.map((metaTeam) => (

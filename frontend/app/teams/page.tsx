@@ -31,32 +31,17 @@ export default async function TeamsPage({
   return (
     <AppShell activeSection="teams">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
-              Team Workspace
-            </div>
-            <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-              Saved Teams
-            </h1>
-            <p className="mt-3 max-w-2xl text-base text-[var(--on-surface-variant)]">
-              Browse current team shells, jump into a team detail view, and use the import lab to turn Showdown text into structured teams.
-            </p>
+        <div>
+          <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
+            Team Workspace
           </div>
-          <div className="flex gap-3">
-            <Link
-              className="rounded-2xl border border-[var(--outline-variant)] bg-white px-5 py-3 font-headline text-sm font-bold text-[var(--on-surface)]"
-              href="/teams#import-lab"
-            >
-              Import Team
-            </Link>
-            <Link
-              className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white"
-              href="/teams?compose=1#import-lab"
-            >
-              New Team Draft
-            </Link>
-          </div>
+          <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+            Saved Teams
+          </h1>
+          <p className="mt-3 max-w-2xl text-base text-[var(--on-surface-variant)]">
+            Browse current team shells, jump into a team detail view, and use the import lab to
+            turn Showdown text into structured teams.
+          </p>
         </div>
 
         {params.compose || teams.length === 0 ? (

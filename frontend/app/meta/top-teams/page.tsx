@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { loadActiveMetaSnapshot } from "@/lib/dashboard-data";
 
@@ -9,24 +8,16 @@ export default async function TopTeamsPage() {
   return (
     <AppShell activeSection="meta">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
-              Top Snapshot Teams
-            </div>
-            <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-              Top 5 Teams
-            </h1>
-            <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
-              A quick prep page for the first five teams in the active stored snapshot.
-            </p>
+        <div>
+          <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
+            Top Snapshot Teams
           </div>
-          <Link
-            className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white"
-            href="/meta"
-          >
-            Back to Meta
-          </Link>
+          <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+            Top 5 Teams
+          </h1>
+          <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
+            A quick prep page for the first five teams in the active stored snapshot.
+          </p>
         </div>
 
         <section className="grid gap-6">

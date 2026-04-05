@@ -97,7 +97,7 @@ export function SnapshotManagementPanel({ snapshots }: { snapshots: MetaSnapshot
 
   return (
     <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+      <article id="snapshot-library" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
         <h2 className="font-headline text-2xl font-bold">Snapshot Library</h2>
         <p className="mt-2 text-sm text-[var(--on-surface-variant)]">
           Activate a stored snapshot or keep multiple dated formats side by side.
@@ -136,7 +136,7 @@ export function SnapshotManagementPanel({ snapshots }: { snapshots: MetaSnapshot
         </div>
       </article>
 
-      <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+      <article id="import-snapshot" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
         <h2 className="font-headline text-2xl font-bold">Import Snapshot JSON</h2>
         <p className="mt-2 text-sm text-[var(--on-surface-variant)]">
           Paste a dated snapshot payload to load a new format or update your local meta set.
@@ -156,7 +156,7 @@ export function SnapshotManagementPanel({ snapshots }: { snapshots: MetaSnapshot
           {status === "saving" ? "Saving Snapshot..." : "Create Snapshot"}
         </button>
 
-        <div className="mt-8 border-t border-[var(--outline-variant)] pt-8">
+        <div id="victory-road-import" className="mt-8 border-t border-[var(--outline-variant)] pt-8">
           <h3 className="font-headline text-xl font-bold">Import From Victory Road</h3>
           <p className="mt-2 text-sm text-[var(--on-surface-variant)]">
             Tournament-result pages are the best automation target for dated snapshots. Paste a

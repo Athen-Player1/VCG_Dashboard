@@ -20,46 +20,20 @@ export default async function AnalysisPage({
   return (
     <AppShell activeSection="analysis">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
-              Analysis Desk
-            </div>
-            <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
-              Team Analysis
-            </h1>
-            <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
-              Review saved teams through the same structural analysis engine used in the builder,
-              then branch into meta work once the shell looks stable.
-            </p>
+        <div>
+          <div className="font-label text-[11px] font-bold uppercase tracking-[0.32em] text-[var(--secondary)]">
+            Analysis Desk
           </div>
-          <div className="flex gap-3">
-            {selectedTeam ? (
-              <Link
-                className="rounded-2xl bg-[var(--secondary-fixed)] px-5 py-3 font-headline text-sm font-bold text-[var(--secondary)]"
-                href={`/teams/${selectedTeam.id}`}
-              >
-                Open Team Builder
-              </Link>
-            ) : null}
-            {selectedTeam ? (
-              <Link
-                className="rounded-2xl bg-[var(--surface-container-low)] px-5 py-3 font-headline text-sm font-bold text-[var(--primary)]"
-                href={`/meta?team=${selectedTeam.id}`}
-              >
-                Compare vs Meta
-              </Link>
-            ) : null}
-            <Link
-              className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] px-6 py-3 font-headline text-sm font-bold text-white"
-              href="/meta"
-            >
-              Review Meta Matchups
-            </Link>
-          </div>
+          <h1 className="mt-2 font-headline text-4xl font-extrabold tracking-tight">
+            Team Analysis
+          </h1>
+          <p className="mt-3 max-w-3xl text-base text-[var(--on-surface-variant)]">
+            Review saved teams through the same structural analysis engine used in the builder,
+            then branch into meta work once the shell looks stable.
+          </p>
         </div>
 
-        <section className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+        <section id="team-picker" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h2 className="font-headline text-2xl font-bold">Choose a Saved Team</h2>
@@ -122,10 +96,12 @@ export default async function AnalysisPage({
           ) : null}
         </section>
 
-        {selectedAnalysis ? <TeamAnalysisPanel analysis={selectedAnalysis} /> : null}
+        <div id="structural-readout">
+          {selectedAnalysis ? <TeamAnalysisPanel analysis={selectedAnalysis} /> : null}
+        </div>
 
         <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+          <article id="format-radar" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
             <h2 className="font-headline text-2xl font-bold">Format Radar</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {data.weaknessSummary.map((item) => (
@@ -139,7 +115,7 @@ export default async function AnalysisPage({
             </div>
           </article>
 
-          <article className="rounded-[1.5rem] bg-white p-8 shadow-sm">
+          <article id="threat-radar" className="rounded-[1.5rem] bg-white p-8 shadow-sm">
             <h2 className="font-headline text-2xl font-bold">Threat Radar</h2>
             <div className="mt-6 space-y-3">
               {data.threats.map((threat) => (
