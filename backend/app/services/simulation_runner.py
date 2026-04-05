@@ -4,8 +4,9 @@ import random
 from collections import Counter
 from typing import Any
 
-from app.models.schemas import TeamResponse
+from app.models.schemas import ShowdownValidationRequest, TeamMemberInput, TeamResponse
 from app.services.meta_compare import build_meta_matchups
+from app.services.showdown_engine import run_showdown_battle_batch, validate_with_showdown
 from app.services.team_analysis import build_team_analysis
 from app.services.team_store import get_team
 
@@ -20,6 +21,11 @@ def run_simulation_job(job: dict[str, Any]) -> dict[str, Any]:
     team = TeamResponse.model_validate(get_team(job["team_id"]))
     opponent_payload = job["opponent_payload"]
     requested_games = int(job["requested_games"])
+
+    if job["opponent_mode"] == "input_team":
+        actual_result = _run_showdown_simulation(team, opponent_payload, requested_games)
+        if actual_result is not None:
+            return actual_result
 
     base_win_rate, context = _calculate_base_win_rate(team, opponent_payload, job["opponent_mode"])
     rng = random.Random(job["id"])
@@ -75,6 +81,87 @@ def run_simulation_job(job: dict[str, Any]) -> dict[str, Any]:
         "sampleGames": sample_logs[:5],
         "simulationEngine": "heuristic-v1",
         "engineNote": "Phase 6 MVP uses a deterministic background heuristic runner shaped around saved-team analysis and stored meta data. It is designed so a full Pokemon Showdown battle engine can replace the core runner later.",
+    }
+
+
+def _run_showdown_simulation(
+    team: TeamResponse, opponent_payload: dict[str, Any], requested_games: int
+) -> dict[str, Any] | None:
+    opponent_validation = opponent_payload.get("showdownValidation")
+    if not opponent_validation or not opponent_validation.get("packedTeam"):
+        return None
+
+    team_validation = validate_with_showdown(
+        ShowdownValidationRequest(
+            format=team.format,
+            members=[
+                TeamMemberInput(
+                    name=member.name,
+                    item=member.item,
+                    ability=member.ability,
+                    types=member.types,
+                    moves=member.moves,
+                    role=member.role,
+                    teraType=member.teraType,
+                    image=member.image,
+                )
+                for member in team.members
+                if member.name
+            ],
+        )
+    )
+
+    if not team_validation["packedTeam"]:
+        return None
+
+    battle_batch = run_showdown_battle_batch(
+        format_name=team.format,
+        packed_team_a=team_validation["packedTeam"],
+        packed_team_b=opponent_validation["packedTeam"],
+        games=requested_games,
+    )
+
+    wins = int(battle_batch.get("p1Wins", 0))
+    losses = int(battle_batch.get("p2Wins", 0))
+    sample_logs = [
+        {
+            "game": result["game"],
+            "result": "win" if result["winner"] == "Alpha" else "loss",
+            "note": _summarize_excerpt(result.get("excerpt", [])),
+        }
+        for result in battle_batch.get("results", [])[:5]
+    ]
+    repeated_issues = [
+        sample["note"]
+        for sample in sample_logs
+        if sample["result"] == "loss"
+    ][:3]
+    threat_names = [
+        member.get("name")
+        for member in opponent_payload.get("members", [])
+        if member.get("name")
+    ][:3]
+
+    recommendations = [
+        "This result came from live Showdown battle-stream execution, so re-run after each team edit to see whether the record actually moves.",
+        "Use the sample logs to review whether losses came from board positioning, speed control, or unchecked pressure.",
+    ]
+    if repeated_issues:
+        recommendations.append(f"Start by reviewing the loss pattern: {repeated_issues[0]}")
+
+    return {
+        "teamName": team.name,
+        "opponentLabel": opponent_payload.get("name", "Imported Team"),
+        "gamesRequested": requested_games,
+        "wins": wins,
+        "losses": losses,
+        "winRate": round((wins / requested_games) * 100, 1) if requested_games else 0,
+        "topThreats": threat_names,
+        "repeatedIssues": repeated_issues,
+        "recommendations": recommendations[:4],
+        "sampleGames": sample_logs,
+        "simulationEngine": "showdown-random-ai-v1",
+        "engineNote": f"Input-team sims now run through the pinned Pokemon Showdown battle stream using random legal-choice bots in {battle_batch.get('formatResolved', team.format)}. Top-meta sims still use the heuristic path until full opponent sets are available.",
     }
 
 
@@ -170,3 +257,22 @@ def _build_recommendations(
         deduped.append(item)
 
     return deduped[:4]
+
+
+def _summarize_excerpt(excerpt: list[str]) -> str:
+    important_lines = []
+    for chunk in excerpt:
+        for line in chunk.splitlines():
+            if line.startswith("|win|"):
+                important_lines.append(f"Winner: {line.replace('|win|', '').strip()}")
+            elif line.startswith("|faint|"):
+                important_lines.append(line.replace("|faint|", "").strip())
+            elif line.startswith("|move|"):
+                parts = line.split("|")
+                if len(parts) >= 4:
+                    important_lines.append(f"{parts[2]} used {parts[3]}")
+
+    if important_lines:
+        return "; ".join(important_lines[:2])
+
+    return "Battle finished through the Showdown stream without a short log summary."

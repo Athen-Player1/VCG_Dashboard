@@ -59,11 +59,12 @@ Build a Dockerized web app for Pokemon VGC that lets a user:
 - Snapshot-management UX can still be polished, but the core import/activate flow is now functional
 - Tournament-result ingestion is now the primary automation path; Showdown usage can remain a secondary future signal
 - A dedicated Showdown engine service now validates and normalizes teams for builder checks and simulation preflight
+- Input-team simulations now target direct Showdown battle-stream execution, while top-meta simulations still use the heuristic path until stored snapshots include fuller sets
 - Most remaining work is polish, deeper heuristics, and simulation accuracy rather than missing core workflow pages
 
 ### Not Started
 
-- Full Pokemon Showdown engine integration for battle-accurate background sims
+- Full Pokemon Showdown engine integration for top-meta snapshots, not just pasted input-team battles
 
 ## Working Features Right Now
 
@@ -224,11 +225,12 @@ Progress:
 - the Testing page now launches 10-game queued runs against the active top meta team or a pasted Showdown opponent
 - completed runs now store win/loss results, repeated issues, top threats, and follow-up recommendations
 - a dedicated Showdown engine service now validates and packs teams before simulation work uses them
-- the current battle runner is still heuristic and intentionally shaped so a fuller Pokemon Showdown battle engine can replace the core runner later
+- pasted input-team simulations now run through direct Showdown battle-stream execution with random legal-choice bots
+- top-meta simulations still use the heuristic path because snapshot teams do not yet store full sets
 
 ## Immediate Next Steps
 
-1. Replace the heuristic simulation core with direct Pokemon Showdown battle-stream execution.
+1. Extend direct Pokemon Showdown battle-stream execution to top-meta simulations by storing fuller snapshot team sets.
 2. Keep polishing builder ergonomics around species/forms and slot editing flow.
 3. Expand the analysis engine with richer role and matchup heuristics.
 4. Polish snapshot-management UX and extend web-ingestion helpers beyond Victory Road.
@@ -238,7 +240,7 @@ Progress:
 
 - Current active milestone: Post-MVP Polish
 - Last completed milestone: Simulation MVP plus Showdown validation integration
-- Current progress: the full requested app loop is now live, including saved teams, Showdown import, analysis, stored snapshots, matchup planning, background 10-game simulation runs, and Showdown-backed team validation
+- Current progress: the full requested app loop is now live, including saved teams, Showdown import, analysis, stored snapshots, matchup planning, Showdown-backed validation, and direct Showdown execution for pasted input-team simulations
 - Current next recommendation: keep tournament results as the primary meta-snapshot source and use Pokemon Showdown next as the battle-engine target for more accurate simulation
 
 ## Notes
@@ -248,4 +250,5 @@ Progress:
 - Tournament results are a better primary source for automated meta snapshots than Showdown ladder data; Showdown should be treated as supplemental usage context.
 - The current simulation lane is an MVP: queued, stored, and useful for workflow testing, but not yet battle-accurate in the way a full Pokemon Showdown engine integration would be.
 - Showdown is now part of the runtime as a dedicated validation and packing service, which reduces risk when swapping the simulator core later.
+- Direct Showdown battle execution is now in use for pasted input-team runs, but snapshot-team sims still need fuller stored sets before they can leave the heuristic path.
 - This document is intended to stay concise and operational rather than become a design essay.

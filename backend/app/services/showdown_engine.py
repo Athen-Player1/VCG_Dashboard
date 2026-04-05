@@ -83,3 +83,35 @@ def validate_with_showdown(payload: ShowdownValidationRequest) -> dict[str, Any]
         "exportedTeam": result.get("exportedTeam", showdown_text),
         "pokemon": [ShowdownPokemon.model_validate(member) for member in pokemon],
     }
+
+
+def run_showdown_battle_batch(
+    *,
+    format_name: str,
+    packed_team_a: str,
+    packed_team_b: str,
+    games: int,
+) -> dict[str, Any]:
+    try:
+        response = requests.post(
+            f"{SHOWDOWN_ENGINE_URL}/simulate/batch",
+            json={
+                "format": format_name,
+                "packedTeamA": packed_team_a,
+                "packedTeamB": packed_team_b,
+                "games": games,
+            },
+            timeout=60,
+        )
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=503, detail="Showdown engine battle service is unavailable") from exc
+
+    if response.status_code >= 400:
+        detail = "Showdown battle batch failed"
+        try:
+            detail = response.json().get("detail", detail)
+        except ValueError:
+            pass
+        raise HTTPException(status_code=502, detail=detail)
+
+    return response.json()
