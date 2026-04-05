@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from dataclasses import dataclass
 from datetime import date
 from urllib.parse import urlparse
 
@@ -10,10 +11,36 @@ from bs4 import BeautifulSoup
 from fastapi import HTTPException
 
 from app.models.schemas import MetaSnapshotCreateRequest, ShowdownPokemon, VictoryRoadImportRequest
-from app.services.meta_store import create_meta_snapshot
+from app.services.meta_store import activate_meta_snapshot, create_meta_snapshot, list_meta_snapshots
 from app.services.showdown_parser import parse_showdown_team
 
 VRPASTES_API_URL = "https://vrpaste-backend.vercel.app/api/paste/{paste_id}?lang=english"
+VICTORY_ROAD_CALENDAR_URL = "https://victoryroad.pro/2026-season-calendar/"
+
+MONTH_MAP = {
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+}
+
+
+@dataclass(frozen=True)
+class CalendarEvent:
+    title: str
+    url: str
+    start_date: date
+    end_date: date
+    winner: str
+    regulation: str
 
 
 def import_victory_road_snapshot(payload: VictoryRoadImportRequest) -> dict:
@@ -49,6 +76,33 @@ def import_victory_road_snapshot(payload: VictoryRoadImportRequest) -> dict:
     return create_meta_snapshot(snapshot_payload)
 
 
+def sync_latest_regulation_snapshot(today: date | None = None) -> dict | None:
+    latest_event = _discover_latest_regulation_event(today=today)
+    if latest_event is None:
+        return None
+
+    snapshot_date = latest_event.end_date.isoformat()
+    snapshot_id = _build_snapshot_id(latest_event.title, snapshot_date)
+    existing = next(
+        (snapshot for snapshot in list_meta_snapshots() if snapshot["id"] == snapshot_id),
+        None,
+    )
+
+    if existing is not None:
+        if not existing["active"]:
+            return activate_meta_snapshot(snapshot_id)
+        return existing
+
+    return import_victory_road_snapshot(
+        VictoryRoadImportRequest(
+            url=latest_event.url,
+            format=f"{latest_event.regulation} Snapshot",
+            snapshotDate=snapshot_date,
+            active=True,
+        )
+    )
+
+
 def _fetch_html(url: str) -> str:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
@@ -78,6 +132,137 @@ def _extract_snapshot_date(soup: BeautifulSoup) -> str | None:
         if datetime_value:
             return datetime_value[:10]
     return None
+
+
+def _discover_latest_regulation_event(today: date | None = None) -> CalendarEvent | None:
+    reference_day = today or date.today()
+    soup = BeautifulSoup(_fetch_html(VICTORY_ROAD_CALENDAR_URL), "html.parser")
+    events = _extract_calendar_events(soup)
+    if not events:
+        return None
+
+    current_regulation = _infer_current_regulation(events, reference_day)
+    if not current_regulation:
+        return None
+
+    eligible = [
+        event
+        for event in events
+        if event.regulation == current_regulation
+        and event.end_date <= reference_day
+        and _has_reported_result(event.winner)
+    ]
+    if not eligible:
+        return None
+
+    return max(eligible, key=lambda event: (event.end_date, event.start_date, event.title))
+
+
+def _extract_calendar_events(soup: BeautifulSoup) -> list[CalendarEvent]:
+    events: list[CalendarEvent] = []
+
+    for row in soup.select("table tr"):
+        columns = row.find_all("td")
+        if len(columns) < 4:
+            continue
+
+        event_link = columns[1].find("a", href=True)
+        if event_link is None:
+            continue
+        parsed_url = urlparse(event_link["href"])
+        if not parsed_url.netloc.endswith("victoryroad.pro"):
+            continue
+
+        parsed_dates = _parse_calendar_dates(columns[0].get_text(" ", strip=True))
+        regulation = _extract_regulation_label(columns[3].get_text(" ", strip=True))
+        if parsed_dates is None or regulation is None:
+            continue
+
+        events.append(
+            CalendarEvent(
+                title=event_link.get_text(" ", strip=True),
+                url=event_link["href"],
+                start_date=parsed_dates[0],
+                end_date=parsed_dates[1],
+                winner=columns[2].get_text(" ", strip=True),
+                regulation=regulation,
+            )
+        )
+
+    return events
+
+
+def _parse_calendar_dates(value: str) -> tuple[date, date] | None:
+    normalized = value.replace("\xa0", " ").replace("–", "-")
+
+    patterns = [
+        r"^(?P<start_day>\d{1,2})-(?P<end_day>\d{1,2}) (?P<month>[A-Za-z]{3}) (?P<year>\d{4})$",
+        r"^(?P<start_day>\d{1,2}) (?P<start_month>[A-Za-z]{3})-(?P<end_day>\d{1,2}) (?P<end_month>[A-Za-z]{3}) (?P<year>\d{4})$",
+        r"^(?P<day>\d{1,2}) (?P<month>[A-Za-z]{3}) (?P<year>\d{4})$",
+    ]
+
+    for pattern in patterns:
+        match = re.match(pattern, normalized)
+        if not match:
+            continue
+
+        groups = match.groupdict()
+        year = int(groups["year"])
+        if groups.get("day"):
+            month = _month_number(groups["month"])
+            day = int(groups["day"])
+            single_date = date(year, month, day)
+            return single_date, single_date
+
+        start_month = _month_number(groups.get("start_month") or groups["month"])
+        end_month = _month_number(groups.get("end_month") or groups["month"])
+        start_day = int(groups["start_day"])
+        end_day = int(groups["end_day"])
+        return date(year, start_month, start_day), date(year, end_month, end_day)
+
+    return None
+
+
+def _month_number(value: str) -> int:
+    month = MONTH_MAP.get(value.strip().lower()[:3])
+    if month is None:
+        raise ValueError(f"Unknown month: {value}")
+    return month
+
+
+def _extract_regulation_label(value: str) -> str | None:
+    match = re.search(r"(Reg(?:ulation)?\.?\s*Set\s*[A-Z](?:-[A-Z])?)", value, flags=re.IGNORECASE)
+    if not match:
+        return None
+
+    label = match.group(1)
+    label = label.replace("Reg.", "Regulation").replace("Reg ", "Regulation ")
+    return re.sub(r"\s+", " ", label).strip()
+
+
+def _infer_current_regulation(events: list[CalendarEvent], today: date) -> str | None:
+    ongoing = [event for event in events if event.start_date <= today <= event.end_date]
+    if ongoing:
+        return min(ongoing, key=lambda event: event.end_date).regulation
+
+    upcoming = [event for event in events if event.start_date >= today]
+    if upcoming:
+        return min(upcoming, key=lambda event: event.start_date).regulation
+
+    completed = [event for event in events if event.end_date <= today]
+    if completed:
+        return max(completed, key=lambda event: event.end_date).regulation
+
+    return None
+
+
+def _has_reported_result(value: str) -> bool:
+    normalized = value.strip().lower()
+    if not normalized:
+        return False
+
+    blockers = ("all info", "sign-ups", "pre-registrations", "tbd", "ongoing")
+    return not any(blocker in normalized for blocker in blockers)
 
 
 def _extract_top_cut_rows(soup: BeautifulSoup) -> list[dict]:
@@ -337,7 +522,7 @@ def _build_member_from_showdown(team: ShowdownPokemon) -> dict:
         "name": normalized_name,
         "item": team.item or "",
         "ability": team.ability or "",
-        "types": [],
+        "types": team.types or [],
         "moves": [move for move in team.moves if move],
         "role": "Imported OTS set",
         "teraType": team.tera_type or None,

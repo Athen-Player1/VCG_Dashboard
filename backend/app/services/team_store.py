@@ -114,7 +114,34 @@ def _normalize_member(member: TeamMemberInput | dict[str, Any]) -> dict[str, Any
 
 
 def initialize_team_store() -> None:
-    return None
+    with get_db_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, members
+                FROM teams
+                """
+            )
+            rows = cursor.fetchall()
+
+            for row in rows:
+                members = row.get("members") or []
+                normalized_members = _apply_inferred_types(
+                    [_normalize_member(member) for member in members]
+                )
+
+                if normalized_members != members:
+                    cursor.execute(
+                        """
+                        UPDATE teams
+                        SET members = %s::jsonb, updated_at = NOW()
+                        WHERE id = %s
+                        """,
+                        (
+                            serialize_json(normalized_members),
+                            row["id"],
+                        ),
+                    )
 
 
 def list_teams() -> list[dict[str, Any]]:

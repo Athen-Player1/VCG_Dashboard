@@ -8,6 +8,7 @@ from app.routers.simulation import router as simulation_router
 from app.routers.teams import router as teams_router
 from app.services.meta_store import initialize_meta_store
 from app.services.team_store import initialize_team_store
+from app.services.victory_road_import import sync_latest_regulation_snapshot
 
 app = FastAPI(title="VGC Dashboard API", version="0.1.0")
 
@@ -25,6 +26,10 @@ def startup() -> None:
     init_db()
     initialize_team_store()
     initialize_meta_store()
+    try:
+        sync_latest_regulation_snapshot()
+    except Exception:
+        pass
 
 
 @app.get("/health")

@@ -39,6 +39,9 @@ DEFAULT_SNAPSHOT = MetaSnapshotSeed(
 def initialize_meta_store() -> None:
     with get_db_connection() as connection:
         with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) AS count FROM meta_snapshots")
+            snapshot_count = int(cursor.fetchone()["count"])
+            seed_active = snapshot_count == 0
             cursor.execute(
                 """
                 INSERT INTO meta_snapshots (
@@ -57,6 +60,7 @@ def initialize_meta_store() -> None:
                     format = EXCLUDED.format,
                     source = EXCLUDED.source,
                     snapshot_date = EXCLUDED.snapshot_date,
+                    active = EXCLUDED.active,
                     weakness_summary = EXCLUDED.weakness_summary,
                     recommendations = EXCLUDED.recommendations,
                     threats = EXCLUDED.threats,
@@ -68,7 +72,7 @@ def initialize_meta_store() -> None:
                     DEFAULT_SNAPSHOT.format,
                     DEFAULT_SNAPSHOT.source,
                     DEFAULT_SNAPSHOT.snapshot_date,
-                    DEFAULT_SNAPSHOT.active,
+                    seed_active,
                     serialize_json(DEFAULT_SNAPSHOT.weakness_summary),
                     serialize_json(DEFAULT_SNAPSHOT.recommendations),
                     serialize_json(DEFAULT_SNAPSHOT.threats),
