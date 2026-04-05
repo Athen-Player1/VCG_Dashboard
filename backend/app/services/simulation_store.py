@@ -6,8 +6,9 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from app.db import get_db_connection, serialize_json
-from app.models.schemas import ShowdownPokemon, SimulationJobCreateRequest
+from app.models.schemas import ShowdownPokemon, ShowdownValidationRequest, SimulationJobCreateRequest
 from app.services.meta_store import get_active_meta_snapshot
+from app.services.showdown_engine import validate_with_showdown
 from app.services.showdown_parser import parse_showdown_team
 from app.services.team_store import get_team
 
@@ -43,7 +44,9 @@ def _normalize_job(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _resolve_opponent_payload(payload: SimulationJobCreateRequest) -> tuple[str, dict[str, Any]]:
+def _resolve_opponent_payload(
+    payload: SimulationJobCreateRequest, team_format: str
+) -> tuple[str, dict[str, Any]]:
     if payload.opponentMode == "top_meta":
         active_snapshot = get_active_meta_snapshot()
         if not active_snapshot["metaTeams"]:
@@ -71,6 +74,17 @@ def _resolve_opponent_payload(payload: SimulationJobCreateRequest) -> tuple[str,
     if not parsed_team:
         raise HTTPException(status_code=400, detail="No Pokemon could be parsed from Showdown text")
 
+    validation = validate_with_showdown(
+        ShowdownValidationRequest(
+            format=team_format,
+            showdownText=payload.showdownText,
+        )
+    )
+    serialized_validation = {
+        **validation,
+        "pokemon": [member.model_dump() for member in validation["pokemon"]],
+    }
+
     opponent_members = [_member_from_showdown(member) for member in parsed_team]
     opponent_label = " / ".join(member.name for member in parsed_team[:2])
     if len(parsed_team) > 2:
@@ -83,13 +97,14 @@ def _resolve_opponent_payload(payload: SimulationJobCreateRequest) -> tuple[str,
             "archetype": "Imported opponent",
             "members": opponent_members,
             "showdownText": payload.showdownText,
+            "showdownValidation": serialized_validation,
         },
     )
 
 
 def create_simulation_job(payload: SimulationJobCreateRequest) -> dict[str, Any]:
     team = get_team(payload.teamId)
-    opponent_label, opponent_payload = _resolve_opponent_payload(payload)
+    opponent_label, opponent_payload = _resolve_opponent_payload(payload, team["format"])
     job_id = f"sim-{uuid4().hex[:10]}"
 
     with get_db_connection() as connection:

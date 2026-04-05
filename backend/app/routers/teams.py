@@ -6,11 +6,14 @@ from app.models.schemas import (
     TeamAnalysisResponse,
     ShowdownImportRequest,
     ShowdownImportResponse,
+    ShowdownValidationRequest,
+    ShowdownValidationResponse,
     TeamCreateRequest,
     TeamResponse,
     TeamUpdateRequest,
 )
 from app.services.meta_compare import build_archetype_matchups, build_meta_matchups
+from app.services.showdown_engine import validate_with_showdown
 from app.services.team_analysis import build_team_analysis
 from app.services.showdown_parser import parse_showdown_team
 from app.services.team_store import (
@@ -73,6 +76,11 @@ def delete_existing_team(team_id: str) -> Response:
 def import_showdown_team(payload: ShowdownImportRequest) -> ShowdownImportResponse:
     pokemon = parse_showdown_team(payload.showdown_text)
     return ShowdownImportResponse(team_name=payload.name, format=payload.format, pokemon=pokemon)
+
+
+@router.post("/showdown-check", response_model=ShowdownValidationResponse)
+def validate_team_with_showdown(payload: ShowdownValidationRequest) -> ShowdownValidationResponse:
+    return ShowdownValidationResponse.model_validate(validate_with_showdown(payload))
 
 
 @router.post("/import-showdown/save", response_model=TeamResponse)

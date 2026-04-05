@@ -5,6 +5,7 @@ import {
   MetaSnapshot,
   PokemonSlot,
   SimulationJob,
+  ShowdownValidation,
   Team,
   TeamAnalysis
 } from "./types";
@@ -237,6 +238,26 @@ export async function createSimulationJob(payload: {
 
   if (!response.ok) {
     throw new Error("Failed to create simulation job");
+  }
+
+  return response.json();
+}
+
+export async function validateShowdownTeam(payload: {
+  format: string;
+  showdownText?: string;
+  members?: PokemonSlot[];
+}): Promise<ShowdownValidation> {
+  const response = await fetch(`${API_BASE_URL}/teams/showdown-check`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to validate team with Showdown");
   }
 
   return response.json();

@@ -19,8 +19,10 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/vgc_dashboard
+      SHOWDOWN_ENGINE_URL: http://showdown-engine:3100
     depends_on:
       - db
+      - showdown-engine
 
   worker:
     build:
@@ -29,8 +31,15 @@ services:
     command: python -m app.sim_worker
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/vgc_dashboard
+      SHOWDOWN_ENGINE_URL: http://showdown-engine:3100
     depends_on:
       - db
+      - showdown-engine
+
+  showdown-engine:
+    build:
+      context: ./showdown-engine
+      dockerfile: Dockerfile
 
   db:
     image: postgres:16-alpine

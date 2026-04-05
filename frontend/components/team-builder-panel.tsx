@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { updateTeam } from "@/lib/api";
+import { updateTeam, validateShowdownTeam } from "@/lib/api";
 import { ChipListInput } from "@/components/chip-list-input";
 import { getPokemonImageUrl, getSmogonDexUrl, getSmogonSearchUrl, normalizePokemonSlot } from "@/lib/pokemon";
-import { PokemonSlot, Team } from "@/lib/types";
+import { PokemonSlot, ShowdownValidation, Team } from "@/lib/types";
 
 const emptyMember = (): PokemonSlot => ({
   name: "",
@@ -66,7 +66,10 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
     Array.from({ length: 6 }, (_, index) => team.members[index] ?? emptyMember())
   );
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [validationStatus, setValidationStatus] = useState<"idle" | "checking" | "error">("idle");
   const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [showdownValidation, setShowdownValidation] = useState<ShowdownValidation | null>(null);
 
   function updateMember(index: number, nextMember: PokemonSlot) {
     setMembers((current) =>
@@ -110,6 +113,29 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
     }
   }
 
+  async function handleShowdownCheck() {
+    setValidationStatus("checking");
+    setValidationError("");
+
+    try {
+      const cleanedMembers = members
+        .filter((member) => member.name.trim())
+        .map((member) => normalizePokemonSlot(member));
+
+      const result = await validateShowdownTeam({
+        format: team.format,
+        members: cleanedMembers
+      });
+      setShowdownValidation(result);
+      setValidationStatus("idle");
+    } catch (caughtError) {
+      setValidationStatus("error");
+      setValidationError(
+        caughtError instanceof Error ? caughtError.message : "Failed to validate with Showdown"
+      );
+    }
+  }
+
   return (
     <section className="rounded-[1.5rem] bg-white p-6 shadow-sm">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -127,9 +153,69 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
         >
           {status === "saving" ? "Saving Slots..." : "Save Team Slots"}
         </button>
+        <button
+          className="rounded-2xl bg-[var(--secondary-fixed)] px-5 py-3 font-headline text-sm font-bold text-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-70"
+          disabled={validationStatus === "checking"}
+          onClick={handleShowdownCheck}
+          type="button"
+        >
+          {validationStatus === "checking" ? "Checking Showdown..." : "Showdown Check"}
+        </button>
       </div>
 
       {error ? <p className="mt-4 text-sm font-semibold text-[var(--error)]">{error}</p> : null}
+      {validationError ? (
+        <p className="mt-2 text-sm font-semibold text-[var(--error)]">{validationError}</p>
+      ) : null}
+
+      {showdownValidation ? (
+        <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-container-low)] p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="font-headline text-xl font-bold">Showdown Validation</div>
+              <p className="mt-2 text-sm text-[var(--on-surface-variant)]">
+                Requested format: {showdownValidation.formatRequested} • Resolved format:{" "}
+                {showdownValidation.formatResolved}
+              </p>
+            </div>
+            <span
+              className={`rounded-full px-4 py-2 font-label text-[10px] font-bold uppercase tracking-[0.2em] ${
+                showdownValidation.valid
+                  ? "bg-[var(--secondary-fixed)] text-[var(--secondary)]"
+                  : "bg-[var(--error-container)] text-[var(--error)]"
+              }`}
+            >
+              {showdownValidation.valid ? "Valid" : "Issues Found"}
+            </span>
+          </div>
+
+          {showdownValidation.issues.length > 0 ? (
+            <div className="mt-4 space-y-2">
+              {showdownValidation.issues.map((issue) => (
+                <p
+                  key={issue}
+                  className="rounded-xl bg-[var(--error-container)]/70 px-4 py-3 text-sm text-[var(--on-surface)]"
+                >
+                  {issue}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-xl bg-white px-4 py-3 text-sm font-medium text-[var(--on-surface-variant)]">
+              Showdown accepted the current export with the resolved validation format.
+            </p>
+          )}
+
+          <details className="mt-4 rounded-xl bg-white p-4">
+            <summary className="cursor-pointer font-headline text-sm font-bold text-[var(--primary)]">
+              View exported team text
+            </summary>
+            <pre className="mt-3 whitespace-pre-wrap text-xs text-[var(--on-surface-variant)]">
+              {showdownValidation.exportedTeam}
+            </pre>
+          </details>
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {members.map((member, index) => (

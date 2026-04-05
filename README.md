@@ -19,6 +19,7 @@ Dockerized web app for building, saving, analyzing, comparing, and testing Pokem
 - Compare saved teams against the active snapshot
 - Generate matchup plans against top teams and common archetypes
 - Queue background 10-game simulation batches against the top meta team or a pasted Showdown team
+- Validate and normalize teams through a dedicated Showdown engine service before sim preflight
 
 ## Run
 
@@ -34,4 +35,5 @@ Then open:
 ## Notes
 
 - The simulation lane is currently an MVP background workflow using a stored heuristic runner.
+- Team validation and packing now run through a dedicated internal service built on the official `pokemon-showdown` package.
 - The architecture is set up so a fuller Pokemon Showdown engine can replace the core simulator later without rewriting the app shell.

@@ -148,3 +148,20 @@ export type SimulationJob = {
   };
   errorMessage?: string | null;
 };
+
+export type ShowdownValidation = {
+  formatRequested: string;
+  formatResolved: string;
+  valid: boolean;
+  issues: string[];
+  packedTeam: string;
+  exportedTeam: string;
+  pokemon: Array<{
+    name: string;
+    item?: string | null;
+    ability?: string | null;
+    moves: string[];
+    nature?: string | null;
+    tera_type?: string | null;
+  }>;
+};

@@ -24,6 +24,22 @@ class ShowdownImportResponse(BaseModel):
     pokemon: list[ShowdownPokemon]
 
 
+class ShowdownValidationRequest(BaseModel):
+    format: str = Field(min_length=1, max_length=120)
+    showdownText: str | None = None
+    members: list["TeamMemberInput"] = Field(default_factory=list)
+
+
+class ShowdownValidationResponse(BaseModel):
+    formatRequested: str
+    formatResolved: str
+    valid: bool
+    issues: list[str] = Field(default_factory=list)
+    packedTeam: str
+    exportedTeam: str
+    pokemon: list[ShowdownPokemon] = Field(default_factory=list)
+
+
 class TeamMember(BaseModel):
     name: str
     item: str
@@ -202,3 +218,6 @@ class SimulationJobResponse(BaseModel):
     completedAt: str | None = None
     summary: dict = Field(default_factory=dict)
     errorMessage: str | None = None
+
+
+ShowdownValidationRequest.model_rebuild()
