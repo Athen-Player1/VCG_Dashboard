@@ -108,7 +108,6 @@ WEATHER_PAYOFF_ABILITIES = {
 WEATHER_PAYOFF_MOVES = {
     "Solar Beam": "sun",
     "Solar Blade": "sun",
-    "Weather Ball": "sun",
     "Thunder": "rain",
     "Hurricane": "rain",
     "Blizzard": "snow",

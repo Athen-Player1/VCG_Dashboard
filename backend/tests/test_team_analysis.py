@@ -78,6 +78,32 @@ def test_team_analysis_flags_unsupported_weather_payoffs() -> None:
     assert any("rain" in detail.summary.lower() for detail in analysis.recommendation_details)
 
 
+def test_team_analysis_rain_shell_does_not_create_fake_sun_mode_from_weather_ball() -> None:
+    team = TeamResponse(
+        id="clean-rain",
+        name="Clean Rain",
+        format="Regulation H",
+        archetype="Rain",
+        notes="",
+        members=[
+            _member("Pelipper", item="Damp Rock", ability="Drizzle", types=["Water", "Flying"], moves=["Weather Ball", "Hurricane", "U-turn", "Protect"], role="Rain setter"),
+            _member("Ludicolo", item="Life Orb", ability="Swift Swim", types=["Water", "Grass"], moves=["Hydro Pump", "Ice Beam", "Energy Ball", "Protect"], role="Rain payoff"),
+            _member("Kingdra", item="Choice Specs", ability="Swift Swim", types=["Water", "Dragon"], moves=["Hydro Pump", "Draco Meteor", "Surf", "Ice Beam"], role="Rain payoff"),
+            _member("Floatzel", item="Choice Band", ability="Swift Swim", types=["Water"], moves=["Waterfall", "Aqua Jet", "Ice Spinner", "Crunch"], role="Rain payoff"),
+            _member("Jolteon", item="Assault Vest", ability="Volt Absorb", types=["Electric"], moves=["Thunder", "Rain Dance", "Shadow Ball", "Alluring Voice"], role="Rain support"),
+            _member("Swampert", item="Mystic Water", ability="Damp", types=["Water", "Ground"], moves=["Waterfall", "Earthquake", "Ice Punch", "Protect"], role="Breaker"),
+        ],
+    )
+
+    analysis = build_team_analysis(team)
+
+    mode_check = next(check for check in analysis.coverage_checks if check.label == "Mode cohesion")
+    assert mode_check.status == "ready"
+    assert "rain" in mode_check.detail.lower()
+    assert not any("reliable sun setter" in item.lower() for item in analysis.recommendations)
+    assert not any("sun" in item.lower() for item in analysis.warnings)
+
+
 def test_victory_road_recommendations_reflect_common_modes() -> None:
     rows = [
         {"player": "A", "record": "8-1", "team": ["Torkoal", "Lilligant", "Farigiraf", "Ursaluna-Bloodmoon", "Incineroar", "Amoonguss"], "ots": ""},

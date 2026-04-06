@@ -321,11 +321,38 @@ def _build_threats(rows: list[dict]) -> list[dict]:
                 "name": name,
                 "threatLevel": level,
                 "reason": f"{name} appeared on {count} of {total_rows} imported top-cut teams.",
-                "counterplay": f"Prepare a tested line for {name} before trusting this snapshot in matchup planning.",
+                "counterplay": _build_threat_counterplay(name),
             }
         )
 
     return threats
+
+
+def _build_threat_counterplay(name: str) -> str:
+    normalized = name.lower().replace(".", "").strip()
+
+    if normalized in {"landorus", "landorus incarnate", "landorus-incarnate", "landorus therian", "landorus-therian"}:
+        return "Bring a clear Ground plan: preserve your Water, Grass, or Ice checks and avoid giving it free positioning turns."
+    if normalized in {"incineroar"}:
+        return "Limit pivot turns with immediate pressure and preserve your anti-Fake Out positioning for the midgame."
+    if normalized in {"rillaboom"}:
+        return "Respect Grassy Glide endgames and pressure it before it can trade Fake Out plus terrain value."
+    if normalized in {"flutter mane"}:
+        return "Keep speed control available and avoid exposing your frailer slots to free Moonblast pressure."
+    if normalized in {"miraidon"}:
+        return "Deny Electric Terrain tempo early and keep your Ground or special bulk pivots healthy for the first trade."
+    if normalized in {"calyrex shadow rider", "calyrex-shadow", "calyrex-shadow-rider"}:
+        return "Force it to trade immediately with priority, speed control, or dark-pressure lines before it snowballs."
+    if normalized in {"farigiraf"}:
+        return "Test your Trick Room denial line early so Armor Tail does not lock you out of your normal revenge tools."
+    if normalized in {"ursaluna bloodmoon", "ursaluna-bloodmoon"}:
+        return "Preserve your defensive tera and pressure turns carefully so Blood Moon does not get uncontested damage cycles."
+    if normalized in {"kyogre", "pelipper"}:
+        return "Treat rain turns as a resource battle and keep your Water resists healthy before committing tera."
+    if normalized in {"koraidon", "torkoal"}:
+        return "Have a defined line for sun mode and avoid spending your Fire-resistant tera too early."
+
+    return f"Identify the first two turns where {name} gains tempo and prep a direct answer for that sequence."
 
 
 def _build_meta_teams(rows: list[dict], format_name: str) -> list[dict]:
