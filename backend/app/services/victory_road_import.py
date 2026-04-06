@@ -359,9 +359,12 @@ def _build_meta_teams(rows: list[dict], format_name: str) -> list[dict]:
 def _build_weakness_summary(rows: list[dict]) -> list[str]:
     usage = Counter(mon for row in rows for mon in row["team"])
     common = [name for name, _ in usage.most_common(3)]
+    pressure_counts = Counter(point for row in rows for point in _infer_pressure_points(row["team"]))
+    top_pressure = [name for name, _ in pressure_counts.most_common(2)]
     return [
         f"Imported snapshot built from {len(rows)} top-cut teams.",
         f"Most common Pokemon in this event snapshot: {', '.join(common)}." if common else "No common-Pokemon note available.",
+        f"Most repeated pressure themes were {', '.join(top_pressure)}." if top_pressure else "No repeated pressure-theme note available.",
         "Use this as a dated event snapshot rather than a universal ladder truth.",
         "If the event OTS links are present, matchup planning can key off published tournament teams instead of guesses.",
     ]
@@ -370,12 +373,26 @@ def _build_weakness_summary(rows: list[dict]) -> list[str]:
 def _build_recommendations(rows: list[dict]) -> list[str]:
     top_row = rows[0]
     lead_core = " / ".join(top_row["team"][:2])
-    return [
+    pressure_counts = Counter(point for row in rows for point in _infer_pressure_points(row["team"]))
+    top_pressures = [name for name, _ in pressure_counts.most_common(2)]
+    archetype_counts = Counter(_infer_archetype(row["team"]) for row in rows)
+    top_archetype, top_archetype_count = archetype_counts.most_common(1)[0]
+
+    recommendations = [
         f"Start prep by testing your main lead into the winning core of {lead_core}.",
-        "Focus your first matchup plans on the most repeated cores rather than every fringe top-cut team equally.",
-        "Use tournament-result snapshots as the primary source of truth, then layer Showdown usage only as a secondary trend signal.",
-        "Re-import fresh event pages as the format evolves so dated snapshots stay explicit.",
+        f"Bias your first gauntlet toward {top_archetype.lower()} teams first; they made up {top_archetype_count} of {len(rows)} imported finishes.",
     ]
+
+    if top_pressures:
+        recommendations.append(
+            f"Build dedicated plans for the most repeated pressure themes here: {', '.join(top_pressures)}."
+        )
+    else:
+        recommendations.append("Focus your first matchup plans on the most repeated cores rather than every fringe top-cut team equally.")
+
+    recommendations.append("Re-import fresh event pages as the format evolves so dated snapshots stay explicit.")
+
+    return recommendations[:4]
 
 
 def _infer_pressure_points(team: list[str]) -> list[str]:
@@ -391,6 +408,18 @@ def _infer_pressure_points(team: list[str]) -> list[str]:
         points.append("trick room endgames")
     if {"urshifu rapid", "urshifu-rapid-strike", "ogerpon wellspring", "ogerpon-w"} & names:
         points.append("water pressure")
+    if {"koraidon", "torkoal", "walking wake", "lilligant", "lilligant-hisui"} & names:
+        points.append("sun mode")
+    if {"pelipper", "kyogre", "archaludon", "basculegion", "basculegion-f"} & names:
+        points.append("rain mode")
+    if {"tyranitar", "excadrill", "garchomp"} & names:
+        points.append("sand pressure")
+    if {"ninetales-alola", "abomasnow", "baxcalibur"} & names:
+        points.append("snow pace")
+    if {"miraidon", "iron hands", "iron bundle", "iron crown", "raging bolt"} & names:
+        points.append("electric terrain tempo")
+    if {"indeedee", "indeedee-f", "armarouge", "deoxys-attack"} & names:
+        points.append("psychic terrain burst")
     if not points:
         points.append("high-level open team sheet pressure")
     return points
@@ -400,10 +429,12 @@ def _infer_archetype(team: list[str]) -> str:
     joined = " ".join(name.lower() for name in team)
     if "farigiraf" in joined or "bloodmoon" in joined or "torkoal" in joined:
         return "Trick Room"
+    if "pelipper" in joined or "kyogre" in joined or "archaludon" in joined:
+        return "Rain"
     if "koraidon" in joined or "groudon" in joined or "torkoal" in joined:
         return "Sun"
-    if "miraidon" in joined:
-        return "Electric offense"
+    if "miraidon" in joined or "iron crown" in joined or "iron bundle" in joined:
+        return "Electric Terrain offense"
     return "Tournament balance"
 
 

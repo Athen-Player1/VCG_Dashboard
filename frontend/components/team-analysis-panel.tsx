@@ -1,5 +1,5 @@
 import { TypeMatrixPanel } from "@/components/type-matrix-panel";
-import { TeamAnalysis } from "@/lib/types";
+import { RecommendationDetail, TeamAnalysis } from "@/lib/types";
 
 function statusClasses(status: string) {
   if (status === "ready") {
@@ -10,6 +10,21 @@ function statusClasses(status: string) {
 }
 
 export function TeamAnalysisPanel({ analysis }: { analysis: TeamAnalysis }) {
+  const recommendationDetails =
+    analysis.recommendation_details?.length > 0
+      ? analysis.recommendation_details
+      : analysis.recommendations.map(
+          (item): RecommendationDetail => ({
+            summary: item,
+            category: "general",
+            severity: "medium",
+            confidence: 70,
+            evidence: [],
+            affectedMembers: [],
+            suggestedFix: item
+          })
+        );
+
   return (
     <section className="space-y-6 rounded-[1.5rem] bg-[var(--surface-container-low)] p-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -166,13 +181,46 @@ export function TeamAnalysisPanel({ analysis }: { analysis: TeamAnalysis }) {
         <div className="rounded-[1.25rem] bg-white p-6 shadow-sm">
           <h3 className="font-headline text-xl font-bold">Recommendations</h3>
           <div className="mt-4 space-y-3">
-            {analysis.recommendations.map((item) => (
-              <p
-                key={item}
-                className="rounded-2xl bg-[var(--surface-container-low)] px-4 py-3 text-sm font-medium text-[var(--on-surface)]"
+            {recommendationDetails.map((item) => (
+              <article
+                key={`${item.category}-${item.summary}`}
+                className="rounded-2xl bg-[var(--surface-container-low)] px-4 py-4"
               >
-                {item}
-              </p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="font-headline text-base font-bold text-[var(--on-surface)]">
+                    {item.summary}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white px-3 py-1 font-label text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--outline)]">
+                      {item.category}
+                    </span>
+                    <span className="rounded-full bg-[var(--secondary-fixed)] px-3 py-1 font-label text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--secondary)]">
+                      {item.severity}
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-[var(--on-surface-variant)]">
+                  {item.suggestedFix}
+                </p>
+                {item.evidence.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {item.evidence.map((evidence) => (
+                      <span
+                        key={evidence}
+                        className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[var(--on-surface-variant)]"
+                      >
+                        {evidence}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[var(--outline)]">
+                  <span>Confidence {item.confidence}%</span>
+                  {item.affectedMembers.length > 0 ? (
+                    <span>Affects {item.affectedMembers.join(", ")}</span>
+                  ) : null}
+                </div>
+              </article>
             ))}
           </div>
         </div>

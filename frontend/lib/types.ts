@@ -90,6 +90,16 @@ export type CoverageCheck = {
   detail: string;
 };
 
+export type RecommendationDetail = {
+  summary: string;
+  category: string;
+  severity: "high" | "medium" | "low";
+  confidence: number;
+  evidence: string[];
+  affectedMembers: string[];
+  suggestedFix: string;
+};
+
 export type TeamAnalysis = {
   team_id: string;
   filled_slots: number;
@@ -101,6 +111,7 @@ export type TeamAnalysis = {
   strengths: string[];
   warnings: string[];
   recommendations: string[];
+  recommendation_details: RecommendationDetail[];
 };
 
 export type MatchupSummary = {

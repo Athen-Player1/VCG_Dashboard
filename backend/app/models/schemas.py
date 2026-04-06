@@ -126,6 +126,16 @@ class CoverageCheck(BaseModel):
     detail: str
 
 
+class RecommendationDetail(BaseModel):
+    summary: str
+    category: str
+    severity: str
+    confidence: int = Field(ge=0, le=100)
+    evidence: list[str] = Field(default_factory=list)
+    affectedMembers: list[str] = Field(default_factory=list)
+    suggestedFix: str = Field(default="")
+
+
 class TeamAnalysisResponse(BaseModel):
     team_id: str
     filled_slots: int
@@ -137,6 +147,7 @@ class TeamAnalysisResponse(BaseModel):
     strengths: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
+    recommendation_details: list[RecommendationDetail] = Field(default_factory=list)
 
 
 class ThreatResponse(BaseModel):
