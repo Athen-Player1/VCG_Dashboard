@@ -6,7 +6,6 @@ __pycache__/
 .env
 .md
 !README.md
-!MASTER_PLAN.md
 dist/
 coverage/
 backend/.pytest_cache/
