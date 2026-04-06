@@ -34,7 +34,7 @@ jobs:
           - service: showdown-engine
             context: ./showdown-engine
             dockerfile: ./showdown-engine/Dockerfile
-            image: ghcr.io/${{ github.repository_owner }}/vgc-dashboard-showdown-engine
+            image: ghcr.io/${{ github.repository_owner }}/vgc-dashboard-sim-engine
 
     steps:
       - name: Check out repository

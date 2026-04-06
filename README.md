@@ -145,7 +145,7 @@ Push to `master` or trigger the `Publish Containers` GitHub Actions workflow man
 - `ghcr.io/athen-player1/vgc-dashboard-web`
 - `ghcr.io/athen-player1/vgc-dashboard-api`
 - `ghcr.io/athen-player1/vgc-dashboard-worker`
-- `ghcr.io/athen-player1/vgc-dashboard-showdown-engine`
+- `ghcr.io/athen-player1/vgc-dashboard-sim-engine`
 
 ### View Container Status
 
