@@ -249,4 +249,5 @@ The remaining work is mostly polish, better heuristics, stronger simulation fide
 
 ## Related Docs
 
+- Contribution workflow: [CONTRIBUTING.md](./CONTRIBUTING.md)
 - Product/build plan: [MASTER_PLAN.md](./MASTER_PLAN.md)

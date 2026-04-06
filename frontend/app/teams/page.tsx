@@ -2,9 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { ShowdownImportPanel } from "@/components/showdown-import-panel";
 import { TeamManagementPanel } from "@/components/team-management-panel";
-import { searchPokemon } from "@/lib/api";
+import { getSmogonSet, searchPokemon } from "@/lib/api";
 import { loadDashboardData } from "@/lib/dashboard-data";
-import { getSmogonDexUrl, getSmogonSearchUrl } from "@/lib/pokemon";
 
 export default async function TeamsPage({
   searchParams
@@ -16,6 +15,16 @@ export default async function TeamsPage({
   const query = params.query?.trim().toLowerCase() ?? "";
   const pokemonMatches = query
     ? await searchPokemon(query).catch(() => [])
+    : [];
+  const pokemonCards = query
+    ? await Promise.all(
+        pokemonMatches.map(async (pokemon) => ({
+          pokemon,
+          smogonSet: pokemon.smogonSetAvailable
+            ? await getSmogonSet(pokemon.name).catch(() => null)
+            : null
+        }))
+      )
     : [];
   const teams = query
     ? data.teams.filter((team) => {
@@ -73,7 +82,7 @@ export default async function TeamsPage({
 
             {pokemonMatches.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {pokemonMatches.map((pokemon) => (
+                {pokemonCards.map(({ pokemon, smogonSet }) => (
                   <article key={pokemon.name} className="card-shadow rounded-[1.25rem] bg-white p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -96,24 +105,54 @@ export default async function TeamsPage({
                         </span>
                       ))}
                     </div>
-                    <div className="mt-5 flex gap-3">
-                      <a
-                        className="rounded-xl bg-[var(--secondary-fixed)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)]"
-                        href={getSmogonDexUrl(pokemon.name)}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        Smogon Dex
-                      </a>
-                      <a
-                        className="rounded-xl bg-white px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)] ring-1 ring-[var(--outline-variant)]"
-                        href={getSmogonSearchUrl(pokemon.name)}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        Smogon Search
-                      </a>
-                    </div>
+                    {smogonSet ? (
+                      <div className="mt-5 rounded-[1rem] bg-[var(--surface-container-low)] p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-headline text-base font-bold">{smogonSet.setName}</p>
+                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--secondary)]">
+                              {smogonSet.format}
+                            </p>
+                          </div>
+                          {smogonSet.teraType ? (
+                            <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[var(--on-surface-variant)] ring-1 ring-[var(--outline-variant)]">
+                              Tera {smogonSet.teraType}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="mt-4 space-y-2 text-sm text-[var(--on-surface-variant)]">
+                          <p>
+                            <span className="font-semibold text-[var(--foreground)]">Item:</span>{" "}
+                            {smogonSet.item}
+                          </p>
+                          <p>
+                            <span className="font-semibold text-[var(--foreground)]">Ability:</span>{" "}
+                            {smogonSet.ability}
+                          </p>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {smogonSet.moves.map((move) => (
+                            <span
+                              key={`${pokemon.name}-${move}`}
+                              className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[var(--on-surface-variant)] ring-1 ring-[var(--outline-variant)]"
+                            >
+                              {move}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="mt-4 text-xs text-[var(--on-surface-variant)]">
+                          Source credited to Smogon Strategy Dex.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mt-5 rounded-[1rem] bg-[var(--surface-container-low)] p-4">
+                        <p className="font-headline text-base font-bold">No Smogon set yet</p>
+                        <p className="mt-2 text-sm text-[var(--on-surface-variant)]">
+                          This species matched the search, but no VGC-ready Smogon set was available to
+                          show inline.
+                        </p>
+                      </div>
+                    )}
                   </article>
                 ))}
               </div>
