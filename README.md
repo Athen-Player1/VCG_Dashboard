@@ -140,12 +140,21 @@ docker compose up --build -d
 
 ### Publish Images To GHCR
 
-Push to `master` or trigger the `Publish Containers` GitHub Actions workflow manually to publish:
+The container images are published to GitHub Container Registry and are refreshed by the `Publish Containers` GitHub Actions workflow on pushes to `master` or manual runs.
 
 - `ghcr.io/athen-player1/vgc-dashboard-web`
 - `ghcr.io/athen-player1/vgc-dashboard-api`
 - `ghcr.io/athen-player1/vgc-dashboard-worker`
 - `ghcr.io/athen-player1/vgc-dashboard-sim-engine`
+
+Example pulls:
+
+```bash
+docker pull ghcr.io/athen-player1/vgc-dashboard-web:latest
+docker pull ghcr.io/athen-player1/vgc-dashboard-api:latest
+docker pull ghcr.io/athen-player1/vgc-dashboard-worker:latest
+docker pull ghcr.io/athen-player1/vgc-dashboard-sim-engine:latest
+```
 
 ### View Container Status
 
