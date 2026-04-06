@@ -138,6 +138,15 @@ docker compose up --build -d
 docker compose up --build -d
 ```
 
+### Publish Images To GHCR
+
+Push to `master` or trigger the `Publish Containers` GitHub Actions workflow manually to publish:
+
+- `ghcr.io/athen-player1/vgc-dashboard-web`
+- `ghcr.io/athen-player1/vgc-dashboard-api`
+- `ghcr.io/athen-player1/vgc-dashboard-worker`
+- `ghcr.io/athen-player1/vgc-dashboard-showdown-engine`
+
 ### View Container Status
 
 ```bash
