@@ -4,6 +4,10 @@ VGC Dashboard is a Dockerized team-building and matchup-prep workspace for Pokem
 
 It lets you build and save teams, import from Pokemon Showdown, analyze structural weaknesses, compare against the current meta snapshot, generate matchup plans, and run queued simulation batches through a dedicated Showdown-backed service.
 
+## Demo
+
+![VGC Dashboard demo](./docs/media/readme-demo.gif)
+
 ## What The App Does
 
 - Save and manage multiple VGC teams
