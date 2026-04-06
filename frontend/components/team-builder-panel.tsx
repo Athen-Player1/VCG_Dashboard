@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { updateTeam, validateShowdownTeam } from "@/lib/api";
+import { useRef, useState } from "react";
+import { getSmogonSet, searchPokemon, updateTeam, validateShowdownTeam } from "@/lib/api";
 import { ChipListInput } from "@/components/chip-list-input";
 import {
   getPokemonImageUrl,
@@ -13,7 +13,7 @@ import {
   getSmogonSearchUrl,
   normalizePokemonSlot
 } from "@/lib/pokemon";
-import { PokemonSlot, ShowdownValidation, Team } from "@/lib/types";
+import { PokemonSearchResult, PokemonSlot, SmogonSet, ShowdownValidation, Team } from "@/lib/types";
 
 const emptyMember = (): PokemonSlot => ({
   name: "",
@@ -77,11 +77,102 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
   const [error, setError] = useState("");
   const [validationError, setValidationError] = useState("");
   const [showdownValidation, setShowdownValidation] = useState<ShowdownValidation | null>(null);
+  const [speciesSuggestions, setSpeciesSuggestions] = useState<Record<number, PokemonSearchResult[]>>({});
+  const [speciesSearchErrors, setSpeciesSearchErrors] = useState<Record<number, string>>({});
+  const [smogonPreview, setSmogonPreview] = useState<Record<number, SmogonSet | null>>({});
+  const [smogonStatus, setSmogonStatus] = useState<Record<number, "idle" | "loading" | "error">>({});
+  const [smogonErrors, setSmogonErrors] = useState<Record<number, string>>({});
+  const speciesSearchRequestIds = useRef<Record<number, number>>({});
+  const smogonRequestIds = useRef<Record<number, number>>({});
 
   function updateMember(index: number, nextMember: PokemonSlot) {
     setMembers((current) =>
       current.map((member, memberIndex) => (memberIndex === index ? nextMember : member))
     );
+  }
+
+  async function handleSpeciesInputChange(index: number, value: string) {
+    updateMember(index, { ...members[index], name: value });
+    setSmogonPreview((current) => ({ ...current, [index]: null }));
+    setSmogonErrors((current) => ({ ...current, [index]: "" }));
+
+    const query = value.trim();
+    if (query.length < 2) {
+      setSpeciesSuggestions((current) => ({ ...current, [index]: [] }));
+      setSpeciesSearchErrors((current) => ({ ...current, [index]: "" }));
+      return;
+    }
+
+    const requestId = (speciesSearchRequestIds.current[index] ?? 0) + 1;
+    speciesSearchRequestIds.current[index] = requestId;
+    setSpeciesSearchErrors((current) => ({ ...current, [index]: "" }));
+
+    try {
+      const results = await searchPokemon(query);
+      if (speciesSearchRequestIds.current[index] !== requestId) {
+        return;
+      }
+      setSpeciesSuggestions((current) => ({ ...current, [index]: results }));
+    } catch (caughtError) {
+      if (speciesSearchRequestIds.current[index] !== requestId) {
+        return;
+      }
+      setSpeciesSearchErrors((current) => ({
+        ...current,
+        [index]: caughtError instanceof Error ? caughtError.message : "Search failed",
+      }));
+      setSpeciesSuggestions((current) => ({ ...current, [index]: [] }));
+    }
+  }
+
+  function applySpeciesSuggestion(index: number, species: string) {
+    updateMember(index, { ...members[index], name: species });
+    setSpeciesSuggestions((current) => ({ ...current, [index]: [] }));
+    setSpeciesSearchErrors((current) => ({ ...current, [index]: "" }));
+  }
+
+  async function handleLoadSmogonSet(index: number) {
+    const species = members[index]?.name.trim();
+    if (!species) {
+      return;
+    }
+
+    const requestId = (smogonRequestIds.current[index] ?? 0) + 1;
+    smogonRequestIds.current[index] = requestId;
+    setSmogonStatus((current) => ({ ...current, [index]: "loading" }));
+    setSmogonErrors((current) => ({ ...current, [index]: "" }));
+
+    try {
+      const smogonSet = await getSmogonSet(species);
+      if (smogonRequestIds.current[index] !== requestId) {
+        return;
+      }
+
+      const currentMember = members[index];
+      updateMember(index, {
+        ...currentMember,
+        name: smogonSet.species,
+        item: smogonSet.item ?? "",
+        ability: smogonSet.ability ?? "",
+        types: smogonSet.types,
+        moves: smogonSet.moves,
+        role: currentMember.role.trim() || smogonSet.setName,
+        teraType: smogonSet.teraType ?? "",
+        image: getPokemonImageUrl(smogonSet.species),
+      });
+      setSmogonPreview((current) => ({ ...current, [index]: smogonSet }));
+      setSmogonStatus((current) => ({ ...current, [index]: "idle" }));
+      setSpeciesSuggestions((current) => ({ ...current, [index]: [] }));
+    } catch (caughtError) {
+      if (smogonRequestIds.current[index] !== requestId) {
+        return;
+      }
+      setSmogonStatus((current) => ({ ...current, [index]: "error" }));
+      setSmogonErrors((current) => ({
+        ...current,
+        [index]: caughtError instanceof Error ? caughtError.message : "Smogon lookup failed",
+      }));
+    }
   }
 
   async function handleSaveMembers() {
@@ -230,6 +321,9 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
           (() => {
             const memberIssues = validateMember(member, members);
             const speciesAliasHint = getPokemonSpeciesAliasHint(member.name);
+            const suggestions = speciesSuggestions[index] ?? [];
+            const loadedSmogonSet = smogonPreview[index];
+            const smogonLookupStatus = smogonStatus[index] ?? "idle";
 
             return (
           <article
@@ -301,14 +395,40 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
                 </span>
                 <input
                   className="mt-2 w-full rounded-xl border border-[var(--outline-variant)] bg-white px-4 py-3 outline-none transition focus:border-[var(--secondary)]"
-                  onChange={(event) =>
-                    updateMember(index, { ...member, name: event.target.value })
-                  }
+                  onChange={(event) => void handleSpeciesInputChange(index, event.target.value)}
                   placeholder="Flutter Mane"
                   value={member.name}
                 />
                 {speciesAliasHint ? (
                   <p className="mt-2 text-xs text-[var(--on-surface-variant)]">{speciesAliasHint}</p>
+                ) : null}
+                {speciesSearchErrors[index] ? (
+                  <p className="mt-2 text-xs font-medium text-[var(--error)]">{speciesSearchErrors[index]}</p>
+                ) : null}
+                {suggestions.length > 0 ? (
+                  <div className="mt-3 space-y-2 rounded-xl bg-[var(--surface-container-low)] p-3">
+                    <div className="font-label text-[10px] uppercase tracking-[0.22em] text-[var(--outline)]">
+                      Pokemon Search
+                    </div>
+                    {suggestions.map((result) => (
+                      <button
+                        key={`${index}-${result.name}`}
+                        className="flex w-full items-center justify-between rounded-xl bg-white px-3 py-2 text-left transition hover:bg-[var(--secondary-fixed)]/50"
+                        onClick={() => applySpeciesSuggestion(index, result.name)}
+                        type="button"
+                      >
+                        <span>
+                          <span className="block text-sm font-semibold text-[var(--on-surface)]">{result.name}</span>
+                          <span className="block text-xs text-[var(--on-surface-variant)]">
+                            {result.types.join(" / ") || "Type data unavailable"}
+                          </span>
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--secondary)]">
+                          {result.smogonSetAvailable ? "Smogon Set" : "Species"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 ) : null}
               </label>
 
@@ -403,6 +523,16 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
                   Clear Slot
                 </button>
                 {member.name.trim() ? (
+                  <button
+                    className="rounded-xl bg-[var(--primary-container)] px-4 py-2.5 font-headline text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={smogonLookupStatus === "loading"}
+                    onClick={() => void handleLoadSmogonSet(index)}
+                    type="button"
+                  >
+                    {smogonLookupStatus === "loading" ? "Loading Set..." : "Load Smogon Set"}
+                  </button>
+                ) : null}
+                {member.name.trim() ? (
                   <a
                     className="rounded-xl bg-[var(--secondary-fixed)] px-4 py-2.5 font-headline text-sm font-bold text-[var(--secondary)]"
                     href={getSmogonDexUrl(member.name)}
@@ -423,6 +553,43 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
                   </a>
                 ) : null}
               </div>
+              {smogonErrors[index] ? (
+                <p className="text-sm font-semibold text-[var(--error)]">{smogonErrors[index]}</p>
+              ) : null}
+              {loadedSmogonSet ? (
+                <div className="rounded-[1rem] bg-[var(--surface-container-low)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="font-headline text-sm font-bold text-[var(--on-surface)]">
+                        {loadedSmogonSet.setName}
+                      </div>
+                      <p className="mt-1 text-xs text-[var(--on-surface-variant)]">
+                        {loadedSmogonSet.format}
+                        {loadedSmogonSet.item ? ` • ${loadedSmogonSet.item}` : ""}
+                        {loadedSmogonSet.ability ? ` • ${loadedSmogonSet.ability}` : ""}
+                      </p>
+                    </div>
+                    <a
+                      className="text-xs font-semibold text-[var(--secondary)] underline-offset-4 hover:underline"
+                      href={loadedSmogonSet.sourceUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      View Source
+                    </a>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {loadedSmogonSet.moves.map((move) => (
+                      <span
+                        key={`${loadedSmogonSet.species}-${loadedSmogonSet.setName}-${move}`}
+                        className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--on-surface-variant)]"
+                      >
+                        {move}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </article>
             );

@@ -104,6 +104,31 @@ def test_team_analysis_rain_shell_does_not_create_fake_sun_mode_from_weather_bal
     assert not any("sun" in item.lower() for item in analysis.warnings)
 
 
+def test_team_analysis_weather_speed_package_counts_as_speed_control() -> None:
+    team = TeamResponse(
+        id="rain-speed",
+        name="Rain Speed",
+        format="Regulation H",
+        archetype="Rain",
+        notes="",
+        members=[
+            _member("Pelipper", item="Damp Rock", ability="Drizzle", types=["Water", "Flying"], moves=["Hurricane", "U-turn", "Protect", "Wide Guard"], role="Rain setter"),
+            _member("Kingdra", item="Choice Specs", ability="Swift Swim", types=["Water", "Dragon"], moves=["Hydro Pump", "Draco Meteor", "Surf", "Ice Beam"], role="Rain payoff"),
+            _member("Ludicolo", item="Life Orb", ability="Swift Swim", types=["Water", "Grass"], moves=["Hydro Pump", "Ice Beam", "Fake Out", "Protect"], role="Rain payoff"),
+            _member("Archaludon", item="Assault Vest", ability="Stamina", types=["Steel", "Dragon"], moves=["Electro Shot", "Flash Cannon", "Draco Meteor", "Body Press"], role="Breaker"),
+            _member("Rillaboom", item="Miracle Seed", ability="Grassy Surge", types=["Grass"], moves=["Fake Out", "Wood Hammer", "Grassy Glide", "U-turn"], role="Support"),
+            _member("Incineroar", item="Safety Goggles", ability="Intimidate", types=["Fire", "Dark"], moves=["Fake Out", "Parting Shot", "Knock Off", "Flare Blitz"], role="Pivot"),
+        ],
+    )
+
+    analysis = build_team_analysis(team)
+
+    speed_check = next(check for check in analysis.coverage_checks if check.label == "Speed control")
+    assert speed_check.status == "ready"
+    assert "weather-enabled speed packages" in speed_check.detail
+    assert not any("Add Icy Wind, Tailwind, Trick Room, Thunder Wave" in item for item in analysis.recommendations)
+
+
 def test_victory_road_recommendations_reflect_common_modes() -> None:
     rows = [
         {"player": "A", "record": "8-1", "team": ["Torkoal", "Lilligant", "Farigiraf", "Ursaluna-Bloodmoon", "Incineroar", "Amoonguss"], "ots": ""},

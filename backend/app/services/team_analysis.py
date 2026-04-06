@@ -113,6 +113,12 @@ WEATHER_PAYOFF_MOVES = {
     "Blizzard": "snow",
     "Aurora Veil": "snow",
 }
+WEATHER_SPEED_ABILITIES = {
+    "Chlorophyll": "sun",
+    "Swift Swim": "rain",
+    "Sand Rush": "sand",
+    "Slush Rush": "snow",
+}
 TERRAIN_SETTER_ABILITIES = {
     "Electric Surge": "electric",
     "Hadron Engine": "electric",
@@ -255,6 +261,7 @@ def _extract_flags(filled_members: list) -> dict[str, object]:
     weather_setters: Counter[str] = Counter()
     weather_payoffs: Counter[str] = Counter()
     weather_needs_support: Counter[str] = Counter()
+    weather_speed_payoffs: Counter[str] = Counter()
     terrain_setters: Counter[str] = Counter()
     terrain_payoffs: Counter[str] = Counter()
     terrain_needs_support: Counter[str] = Counter()
@@ -280,6 +287,10 @@ def _extract_flags(filled_members: list) -> dict[str, object]:
             if item != BOOSTER_ITEM:
                 weather_needs_support[weather_payoff] += 1
 
+        weather_speed = WEATHER_SPEED_ABILITIES.get(ability)
+        if weather_speed:
+            weather_speed_payoffs[weather_speed] += 1
+
         terrain_payoff = TERRAIN_PAYOFF_ABILITIES.get(ability)
         if terrain_payoff:
             terrain_payoffs[terrain_payoff] += 1
@@ -304,10 +315,13 @@ def _extract_flags(filled_members: list) -> dict[str, object]:
         ):
             trick_room_payoff_count += 1
 
+    weather_speed_control_count = sum(
+        count for weather, count in weather_speed_payoffs.items() if weather_setters.get(weather, 0) > 0
+    )
     protect_count = sum(1 for member in filled_members if any(move == "Protect" for move in member.moves))
     speed_control_count = sum(1 for move in moves if move in SPEED_CONTROL_MOVES) + sum(
         1 for role in roles if "speed" in role or "tailwind" in role or "trick room" in role
-    )
+    ) + weather_speed_control_count
     redirection_count = sum(1 for move in moves if move in REDIRECTION_MOVES)
     fake_out_count = moves.get("Fake Out", 0)
     intimidate_count = abilities.get("Intimidate", 0)
@@ -332,6 +346,7 @@ def _extract_flags(filled_members: list) -> dict[str, object]:
         "weather_setters": weather_setters,
         "weather_payoffs": weather_payoffs,
         "weather_needs_support": weather_needs_support,
+        "weather_speed_control_count": weather_speed_control_count,
         "terrain_setters": terrain_setters,
         "terrain_payoffs": terrain_payoffs,
         "terrain_needs_support": terrain_needs_support,
@@ -408,7 +423,7 @@ def _build_coverage_checks(filled_members: list, flags: dict[str, object]) -> li
         CoverageCheck(
             label="Speed control",
             status="ready" if flags["speed_control_count"] > 0 else "thin",
-            detail="The team has at least one credible way to manipulate turn order."
+            detail=_speed_control_detail(flags)
             if flags["speed_control_count"] > 0
             else "Add Tailwind, Icy Wind, Trick Room, Thunder Wave, or a stronger speed role.",
         ),
@@ -622,6 +637,13 @@ def _build_notes(
         for item in top_candidates
     ]
     return strengths[:4], warnings[:4], recommendations, recommendation_details
+
+
+def _speed_control_detail(flags: dict[str, object]) -> str:
+    weather_speed_control_count = int(flags.get("weather_speed_control_count", 0))
+    if weather_speed_control_count > 0:
+        return "The team has turn-order pressure through conventional tools and weather-enabled speed packages."
+    return "The team has at least one credible way to manipulate turn order."
 
 
 def _append_mode_notes(

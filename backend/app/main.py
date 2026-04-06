@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db import init_db
 from app.routers.dashboard import router as dashboard_router
 from app.routers.meta import router as meta_router
+from app.routers.pokemon import router as pokemon_router
 from app.routers.simulation import router as simulation_router
 from app.routers.teams import router as teams_router
 from app.services.meta_store import initialize_meta_store
@@ -39,5 +40,6 @@ def healthcheck() -> dict[str, str]:
 
 app.include_router(dashboard_router)
 app.include_router(meta_router)
+app.include_router(pokemon_router)
 app.include_router(simulation_router)
 app.include_router(teams_router)

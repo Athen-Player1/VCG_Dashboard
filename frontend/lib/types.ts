@@ -188,3 +188,23 @@ export type ShowdownValidation = {
     tera_type?: string | null;
   }>;
 };
+
+export type PokemonSearchResult = {
+  name: string;
+  types: string[];
+  formats: string[];
+  smogonSetAvailable: boolean;
+};
+
+export type SmogonSet = {
+  species: string;
+  format: string;
+  setName: string;
+  item?: string | null;
+  ability?: string | null;
+  moves: string[];
+  teraType?: string | null;
+  nature?: string | null;
+  types: string[];
+  sourceUrl: string;
+};

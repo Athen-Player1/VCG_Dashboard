@@ -3,8 +3,10 @@ import {
   DashboardData,
   MatchupSummary,
   MetaSnapshot,
+  PokemonSearchResult,
   PokemonSlot,
   SimulationJob,
+  SmogonSet,
   ShowdownValidation,
   Team,
   TeamAnalysis,
@@ -260,6 +262,30 @@ export async function validateShowdownTeam(payload: {
 
   if (!response.ok) {
     throw new Error("Failed to validate team with Showdown");
+  }
+
+  return response.json();
+}
+
+export async function searchPokemon(query: string): Promise<PokemonSearchResult[]> {
+  const response = await fetch(`${API_BASE_URL}/pokemon/search?query=${encodeURIComponent(query)}`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to search Pokemon");
+  }
+
+  return response.json();
+}
+
+export async function getSmogonSet(name: string): Promise<SmogonSet> {
+  const response = await fetch(`${API_BASE_URL}/pokemon/smogon-set?name=${encodeURIComponent(name)}`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load Smogon set");
   }
 
   return response.json();

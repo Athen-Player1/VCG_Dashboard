@@ -41,6 +41,26 @@ class ShowdownValidationResponse(BaseModel):
     pokemon: list[ShowdownPokemon] = Field(default_factory=list)
 
 
+class PokemonSearchResult(BaseModel):
+    name: str
+    types: list[str] = Field(default_factory=list)
+    formats: list[str] = Field(default_factory=list)
+    smogonSetAvailable: bool = False
+
+
+class SmogonSetResponse(BaseModel):
+    species: str
+    format: str
+    setName: str
+    item: str | None = None
+    ability: str | None = None
+    moves: list[str] = Field(default_factory=list)
+    teraType: str | None = None
+    nature: str | None = None
+    types: list[str] = Field(default_factory=list)
+    sourceUrl: str
+
+
 class TeamMember(BaseModel):
     name: str
     item: str
