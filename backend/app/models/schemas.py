@@ -63,6 +63,17 @@ class TeamMemberInput(BaseModel):
     image: str | None = None
 
 
+class TeamThreatPlan(BaseModel):
+    threat: str = Field(min_length=1, max_length=120)
+    plan: str = Field(default="")
+
+
+class TeamPlaybook(BaseModel):
+    defaultPlan: str = Field(default="")
+    pilotNotes: str = Field(default="")
+    threatPlans: list[TeamThreatPlan] = Field(default_factory=list)
+
+
 class TeamResponse(BaseModel):
     id: str
     name: str
@@ -70,6 +81,7 @@ class TeamResponse(BaseModel):
     archetype: str
     elo: int | None = None
     notes: str
+    playbook: TeamPlaybook = Field(default_factory=TeamPlaybook)
     tags: list[str] = Field(default_factory=list)
     members: list[TeamMember] = Field(default_factory=list)
 
@@ -79,6 +91,7 @@ class TeamCreateRequest(BaseModel):
     format: str = Field(min_length=1, max_length=80)
     archetype: str = Field(min_length=1, max_length=80)
     notes: str = Field(default="")
+    playbook: TeamPlaybook = Field(default_factory=TeamPlaybook)
     tags: list[str] = Field(default_factory=list)
     members: list[TeamMemberInput] = Field(default_factory=list)
 
@@ -88,6 +101,7 @@ class TeamUpdateRequest(BaseModel):
     format: str = Field(min_length=1, max_length=80)
     archetype: str = Field(min_length=1, max_length=80)
     notes: str = Field(default="")
+    playbook: TeamPlaybook = Field(default_factory=TeamPlaybook)
     tags: list[str] = Field(default_factory=list)
     members: list[TeamMemberInput] = Field(default_factory=list)
 

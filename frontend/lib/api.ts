@@ -7,7 +7,8 @@ import {
   SimulationJob,
   ShowdownValidation,
   Team,
-  TeamAnalysis
+  TeamAnalysis,
+  TeamPlaybook
 } from "./types";
 
 const API_BASE_URL =
@@ -164,6 +165,7 @@ type TeamMutationPayload = {
   format: string;
   archetype: string;
   notes: string;
+  playbook: TeamPlaybook;
   tags: string[];
   members: PokemonSlot[];
 };

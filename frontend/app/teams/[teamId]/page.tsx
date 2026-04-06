@@ -4,7 +4,13 @@ import { AppShell } from "@/components/app-shell";
 import { TeamAnalysisPanel } from "@/components/team-analysis-panel";
 import { TeamBuilderPanel } from "@/components/team-builder-panel";
 import { TeamManagementPanel } from "@/components/team-management-panel";
-import { loadTeamAnalysis, loadTeamById } from "@/lib/dashboard-data";
+import { TeamPlaybookPanel } from "@/components/team-playbook-panel";
+import {
+  loadActiveMetaSnapshot,
+  loadTeamAnalysis,
+  loadTeamById,
+  loadTeamMetaMatchups
+} from "@/lib/dashboard-data";
 
 export default async function TeamDetailPage({
   params
@@ -12,8 +18,12 @@ export default async function TeamDetailPage({
   params: Promise<{ teamId: string }>;
 }) {
   const { teamId } = await params;
-  const team = await loadTeamById(teamId);
-  const analysis = await loadTeamAnalysis(teamId);
+  const [team, analysis, activeSnapshot, metaMatchups] = await Promise.all([
+    loadTeamById(teamId),
+    loadTeamAnalysis(teamId),
+    loadActiveMetaSnapshot(),
+    loadTeamMetaMatchups(teamId)
+  ]);
 
   if (!team) {
     notFound();
@@ -25,6 +35,7 @@ export default async function TeamDetailPage({
       pageNavigation={[
         { href: `/teams/${team.id}`, label: `${team.name} Overview`, icon: "overview" },
         { href: `/teams/${team.id}#team-builder`, label: "Builder", icon: "build" },
+        { href: `/teams/${team.id}#team-playbook`, label: "Playbook", icon: "menu_book" },
         { href: `/teams/${team.id}#team-analysis`, label: "Analysis", icon: "analytics" },
         { href: `/teams/${team.id}#team-settings`, label: "Settings", icon: "settings" }
       ]}
@@ -102,10 +113,28 @@ export default async function TeamDetailPage({
           <TeamBuilderPanel team={team} />
         </div>
 
+        <div id="team-playbook">
+          <TeamPlaybookPanel
+            activeSnapshot={activeSnapshot}
+            analysis={analysis}
+            metaMatchups={metaMatchups}
+            team={team}
+          />
+        </div>
+
         <div id="team-analysis">{analysis ? <TeamAnalysisPanel analysis={analysis} /> : null}</div>
 
         <div id="team-settings">
-          <TeamManagementPanel mode="edit" team={team} />
+          <TeamManagementPanel
+            mode="edit"
+            suggestedThreats={Array.from(
+              new Set([
+                ...(activeSnapshot?.threats.map((threat) => threat.name) ?? []),
+                ...(metaMatchups?.slice(0, 5).map((matchup) => matchup.meta_team_name) ?? [])
+              ])
+            ).slice(0, 8)}
+            team={team}
+          />
         </div>
       </div>
     </AppShell>

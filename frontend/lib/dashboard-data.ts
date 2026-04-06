@@ -28,6 +28,11 @@ export const fallbackData: DashboardData = {
       archetype: "Prototype",
       notes:
         "Frontend fallback while the API is unavailable. Once the backend is up, live data will replace this preview automatically.",
+      playbook: {
+        defaultPlan: "",
+        pilotNotes: "",
+        threatPlans: []
+      },
       tags: ["Preview"],
       members: [
         {
@@ -98,6 +103,11 @@ export const fallbackData: DashboardData = {
       format: "Regulation H",
       archetype: "Trick Room",
       notes: "Secondary preview team for layout validation.",
+      playbook: {
+        defaultPlan: "",
+        pilotNotes: "",
+        threatPlans: []
+      },
       tags: ["Preview"],
       members: [
         {

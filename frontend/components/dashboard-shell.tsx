@@ -1,9 +1,22 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { DashboardData, MetaTeam, Team, Threat } from "@/lib/types";
 import { ShowdownImportPanel } from "./showdown-import-panel";
 
-function TeamCard({ team }: { team: Team }) {
+function TeamCard({
+  team,
+  teams,
+  selectedTeamId,
+  onSelectTeam
+}: {
+  team: Team;
+  teams: Team[];
+  selectedTeamId: string;
+  onSelectTeam: (teamId: string) => void;
+}) {
   return (
     <article className="card-shadow rounded-[1.25rem] bg-white p-6 transition-transform hover:-translate-y-1">
       <div className="flex items-start justify-between">
@@ -24,12 +37,31 @@ function TeamCard({ team }: { team: Team }) {
           <div className="font-label text-sm font-bold text-[var(--secondary)]">
             {team.elo ? `${team.elo} ELO` : "Scrim Team"}
           </div>
-          <Link
-            className="mt-2 inline-flex text-[var(--outline)] transition-colors hover:text-[var(--primary)]"
-            href={`/teams/${team.id}`}
-          >
-            <span className="material-symbols-outlined">open_in_new</span>
-          </Link>
+          {teams.length > 1 ? (
+            <label className="mt-3 block text-left">
+              <span className="font-label text-[10px] uppercase tracking-[0.22em] text-[var(--outline)]">
+                Dashboard Team
+              </span>
+              <select
+                className="mt-2 w-full rounded-xl border border-[var(--outline-variant)] bg-[var(--surface-container-low)] px-3 py-2 text-sm outline-none transition focus:border-[var(--secondary)]"
+                onChange={(event) => onSelectTeam(event.target.value)}
+                value={selectedTeamId}
+              >
+                {teams.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <Link
+              className="mt-2 inline-flex text-[var(--outline)] transition-colors hover:text-[var(--primary)]"
+              href={`/teams/${team.id}`}
+            >
+              <span className="material-symbols-outlined">open_in_new</span>
+            </Link>
+          )}
         </div>
       </div>
       <div className="mt-6 grid grid-cols-3 gap-3 md:grid-cols-6">
@@ -148,7 +180,9 @@ function MetaCard({ metaTeam }: { metaTeam: MetaTeam }) {
 }
 
 export function DashboardShell({ data }: { data: DashboardData }) {
-  const [activeTeam, secondaryTeam] = data.teams;
+  const [selectedTeamId, setSelectedTeamId] = useState(data.teams[0]?.id ?? "");
+  const activeTeam = data.teams.find((team) => team.id === selectedTeamId) ?? data.teams[0];
+  const secondaryTeam = data.teams.find((team) => team.id !== activeTeam?.id);
   const hasTeams = data.teams.length > 0;
 
   return (
@@ -170,7 +204,12 @@ export function DashboardShell({ data }: { data: DashboardData }) {
         <section className="space-y-8 xl:col-span-8">
               {hasTeams && activeTeam ? (
                 <>
-                  <TeamCard team={activeTeam} />
+                  <TeamCard
+                    onSelectTeam={setSelectedTeamId}
+                    selectedTeamId={selectedTeamId}
+                    team={activeTeam}
+                    teams={data.teams}
+                  />
                   <div className="grid gap-8 md:grid-cols-[1.15fr_0.85fr]">
                     {secondaryTeam ? (
                       <article className="card-shadow rounded-[1.25rem] bg-white p-6">

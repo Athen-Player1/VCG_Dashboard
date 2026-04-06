@@ -101,6 +101,7 @@ export function TeamBuilderPanel({ team }: { team: Team }) {
         format: team.format,
         archetype: team.archetype,
         notes: team.notes,
+        playbook: team.playbook,
         tags: team.tags,
         members: cleanedMembers
       });

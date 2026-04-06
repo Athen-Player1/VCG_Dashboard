@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createTeam, deleteTeam, updateTeam } from "@/lib/api";
-import { Team } from "@/lib/types";
+import { Team, TeamThreatPlan } from "@/lib/types";
 
 function parseTags(rawTags: string): string[] {
   return rawTags
@@ -15,19 +15,42 @@ function parseTags(rawTags: string): string[] {
 
 export function TeamManagementPanel({
   mode,
-  team
+  team,
+  suggestedThreats = []
 }: {
   mode: "create" | "edit";
   team?: Team;
+  suggestedThreats?: string[];
 }) {
   const router = useRouter();
   const [name, setName] = useState(team?.name ?? "");
   const [format, setFormat] = useState(team?.format ?? "");
   const [archetype, setArchetype] = useState(team?.archetype ?? "Balance");
   const [notes, setNotes] = useState(team?.notes ?? "");
+  const [defaultPlan, setDefaultPlan] = useState(team?.playbook.defaultPlan ?? "");
+  const [pilotNotes, setPilotNotes] = useState(team?.playbook.pilotNotes ?? "");
   const [tags, setTags] = useState(team?.tags.join(", ") ?? "");
+  const seededThreatPlans = (() => {
+    const savedPlans = team?.playbook.threatPlans ?? [];
+    const planMap = new Map(savedPlans.map((entry) => [entry.threat, entry.plan]));
+    const mergedThreats = Array.from(
+      new Set([...savedPlans.map((entry) => entry.threat), ...suggestedThreats])
+    );
+
+    return mergedThreats.map((threat) => ({
+      threat,
+      plan: planMap.get(threat) ?? ""
+    }));
+  })();
+  const [threatPlans, setThreatPlans] = useState<TeamThreatPlan[]>(seededThreatPlans);
   const [status, setStatus] = useState<"idle" | "saving" | "deleting" | "error">("idle");
   const [error, setError] = useState("");
+
+  function updateThreatPlan(index: number, plan: string) {
+    setThreatPlans((current) =>
+      current.map((entry, entryIndex) => (entryIndex === index ? { ...entry, plan } : entry))
+    );
+  }
 
   async function handleSubmit() {
     setStatus("saving");
@@ -39,6 +62,11 @@ export function TeamManagementPanel({
         format,
         archetype,
         notes,
+        playbook: {
+          defaultPlan,
+          pilotNotes,
+          threatPlans: threatPlans.filter((entry) => entry.threat.trim() || entry.plan.trim())
+        },
         tags: parseTags(tags),
         members: team?.members ?? []
       };
@@ -156,6 +184,64 @@ export function TeamManagementPanel({
           value={notes}
         />
       </label>
+
+      <div className="mt-6 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <label className="block">
+          <span className="font-label text-[10px] uppercase tracking-[0.22em] text-[var(--outline)]">
+            Default Game Plan
+          </span>
+          <textarea
+            className="mt-2 min-h-36 w-full rounded-[1.25rem] border border-[var(--outline-variant)] bg-[var(--surface-container-lowest)] px-4 py-3 outline-none transition focus:border-[var(--secondary)]"
+            onChange={(event) => setDefaultPlan(event.target.value)}
+            placeholder="How do you usually lead, stabilize the board, and close games with this team?"
+            value={defaultPlan}
+          />
+        </label>
+
+        <label className="block">
+          <span className="font-label text-[10px] uppercase tracking-[0.22em] text-[var(--outline)]">
+            Pilot Notes
+          </span>
+          <textarea
+            className="mt-2 min-h-36 w-full rounded-[1.25rem] border border-[var(--outline-variant)] bg-[var(--surface-container-lowest)] px-4 py-3 outline-none transition focus:border-[var(--secondary)]"
+            onChange={(event) => setPilotNotes(event.target.value)}
+            placeholder="Extra reminders, tera discipline, lead traps, positioning notes, or endgame rules."
+            value={pilotNotes}
+          />
+        </label>
+      </div>
+
+      <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-container-low)] p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="font-headline text-xl font-bold">Matchup Notebook</h3>
+            <p className="mt-2 text-sm text-[var(--on-surface-variant)]">
+              Save your plan into common meta threats so each team keeps its own prep notes.
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 space-y-4">
+          {threatPlans.length > 0 ? (
+            threatPlans.map((entry, index) => (
+              <label key={entry.threat} className="block rounded-[1.15rem] bg-white p-4">
+                <span className="font-label text-[10px] uppercase tracking-[0.22em] text-[var(--outline)]">
+                  {entry.threat}
+                </span>
+                <textarea
+                  className="mt-2 min-h-24 w-full rounded-xl border border-[var(--outline-variant)] bg-[var(--surface-container-lowest)] px-4 py-3 outline-none transition focus:border-[var(--secondary)]"
+                  onChange={(event) => updateThreatPlan(index, event.target.value)}
+                  placeholder={`What is your plan into ${entry.threat}?`}
+                  value={entry.plan}
+                />
+              </label>
+            ))
+          ) : (
+            <p className="text-sm text-[var(--on-surface-variant)]">
+              Threat slots will appear here once the team page has live meta context.
+            </p>
+          )}
+        </div>
+      </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button

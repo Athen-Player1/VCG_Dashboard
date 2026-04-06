@@ -37,11 +37,18 @@ def init_db() -> None:
                     archetype TEXT NOT NULL,
                     elo INTEGER,
                     notes TEXT NOT NULL DEFAULT '',
+                    playbook JSONB NOT NULL DEFAULT '{}'::jsonb,
                     tags JSONB NOT NULL DEFAULT '[]'::jsonb,
                     members JSONB NOT NULL DEFAULT '[]'::jsonb,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 )
+                """
+            )
+            cursor.execute(
+                """
+                ALTER TABLE teams
+                ADD COLUMN IF NOT EXISTS playbook JSONB NOT NULL DEFAULT '{}'::jsonb
                 """
             )
             cursor.execute(

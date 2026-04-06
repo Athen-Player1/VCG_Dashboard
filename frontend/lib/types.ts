@@ -9,6 +9,17 @@ export type PokemonSlot = {
   image: string;
 };
 
+export type TeamThreatPlan = {
+  threat: string;
+  plan: string;
+};
+
+export type TeamPlaybook = {
+  defaultPlan: string;
+  pilotNotes: string;
+  threatPlans: TeamThreatPlan[];
+};
+
 export type Team = {
   id: string;
   name: string;
@@ -16,6 +27,7 @@ export type Team = {
   archetype: string;
   elo?: number;
   notes: string;
+  playbook: TeamPlaybook;
   tags: string[];
   members: PokemonSlot[];
 };

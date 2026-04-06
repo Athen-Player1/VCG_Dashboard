@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from app.db import get_db_connection, serialize_json
 from app.models.schemas import (
     ShowdownPokemon,
+    TeamPlaybook,
     TeamCreateRequest,
     TeamMemberInput,
     TeamUpdateRequest,
@@ -113,12 +114,29 @@ def _normalize_member(member: TeamMemberInput | dict[str, Any]) -> dict[str, Any
     }
 
 
+def _normalize_playbook(playbook: TeamPlaybook | dict[str, Any] | None) -> dict[str, Any]:
+    payload = playbook.model_dump() if isinstance(playbook, TeamPlaybook) else dict(playbook or {})
+    threat_plans = []
+    for entry in payload.get("threatPlans", []):
+        threat = str(entry.get("threat", "")).strip()
+        plan = str(entry.get("plan", "")).strip()
+        if not threat:
+            continue
+        threat_plans.append({"threat": threat, "plan": plan})
+
+    return {
+        "defaultPlan": str(payload.get("defaultPlan", "")).strip(),
+        "pilotNotes": str(payload.get("pilotNotes", "")).strip(),
+        "threatPlans": threat_plans,
+    }
+
+
 def initialize_team_store() -> None:
     with get_db_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT id, members
+                SELECT id, members, playbook
                 FROM teams
                 """
             )
@@ -126,19 +144,22 @@ def initialize_team_store() -> None:
 
             for row in rows:
                 members = row.get("members") or []
+                playbook = row.get("playbook") or {}
                 normalized_members = _apply_inferred_types(
                     [_normalize_member(member) for member in members]
                 )
+                normalized_playbook = _normalize_playbook(playbook)
 
-                if normalized_members != members:
+                if normalized_members != members or normalized_playbook != playbook:
                     cursor.execute(
                         """
                         UPDATE teams
-                        SET members = %s::jsonb, updated_at = NOW()
+                        SET members = %s::jsonb, playbook = %s::jsonb, updated_at = NOW()
                         WHERE id = %s
                         """,
                         (
                             serialize_json(normalized_members),
+                            serialize_json(normalized_playbook),
                             row["id"],
                         ),
                     )
@@ -150,6 +171,7 @@ def list_teams() -> list[dict[str, Any]]:
             cursor.execute(
                 """
                 SELECT id, name, format, archetype, elo, notes, tags, members
+                     , playbook
                 FROM teams
                 ORDER BY created_at ASC
                 """
@@ -165,6 +187,7 @@ def get_team(team_id: str) -> dict[str, Any]:
             cursor.execute(
                 """
                 SELECT id, name, format, archetype, elo, notes, tags, members
+                     , playbook
                 FROM teams
                 WHERE id = %s
                 """,
@@ -190,6 +213,7 @@ def create_team_from_showdown(
         "archetype": "Imported Team",
         "elo": None,
         "notes": "Imported from Pokemon Showdown export.",
+        "playbook": _normalize_playbook(None),
         "tags": ["Imported", "Showdown"],
         "members": members,
     }
@@ -198,9 +222,9 @@ def create_team_from_showdown(
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                INSERT INTO teams (id, name, format, archetype, elo, notes, tags, members)
-                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb)
-                RETURNING id, name, format, archetype, elo, notes, tags, members
+                INSERT INTO teams (id, name, format, archetype, elo, notes, playbook, tags, members)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb)
+                RETURNING id, name, format, archetype, elo, notes, playbook, tags, members
                 """,
                 (
                     team["id"],
@@ -209,6 +233,7 @@ def create_team_from_showdown(
                     team["archetype"],
                     team["elo"],
                     team["notes"],
+                    serialize_json(team["playbook"]),
                     serialize_json(team["tags"]),
                     serialize_json(team["members"]),
                 ),
@@ -225,9 +250,9 @@ def create_team(payload: TeamCreateRequest) -> dict[str, Any]:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                INSERT INTO teams (id, name, format, archetype, elo, notes, tags, members)
-                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb)
-                RETURNING id, name, format, archetype, elo, notes, tags, members
+                INSERT INTO teams (id, name, format, archetype, elo, notes, playbook, tags, members)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb)
+                RETURNING id, name, format, archetype, elo, notes, playbook, tags, members
                 """,
                 (
                     team_id,
@@ -236,6 +261,7 @@ def create_team(payload: TeamCreateRequest) -> dict[str, Any]:
                     payload.archetype,
                     None,
                     payload.notes,
+                    serialize_json(_normalize_playbook(payload.playbook)),
                     serialize_json(payload.tags),
                     serialize_json(members),
                 ),
@@ -257,17 +283,19 @@ def update_team(team_id: str, payload: TeamUpdateRequest) -> dict[str, Any]:
                     format = %s,
                     archetype = %s,
                     notes = %s,
+                    playbook = %s::jsonb,
                     tags = %s::jsonb,
                     members = %s::jsonb,
                     updated_at = NOW()
                 WHERE id = %s
-                RETURNING id, name, format, archetype, elo, notes, tags, members
+                RETURNING id, name, format, archetype, elo, notes, playbook, tags, members
                 """,
                 (
                     payload.name,
                     payload.format,
                     payload.archetype,
                     payload.notes,
+                    serialize_json(_normalize_playbook(payload.playbook)),
                     serialize_json(payload.tags),
                     serialize_json(members),
                     team_id,
