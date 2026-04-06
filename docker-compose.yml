@@ -1,8 +1,7 @@
 services:
   web:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ${WEB_IMAGE:-ghcr.io/athen-player1/vgc-dashboard-web:latest}
+    pull_policy: always
     ports:
       - "3000:3000"
     environment:
@@ -12,9 +11,8 @@ services:
       - api
 
   api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${API_IMAGE:-ghcr.io/athen-player1/vgc-dashboard-api:latest}
+    pull_policy: always
     ports:
       - "8000:8000"
     environment:
@@ -25,9 +23,8 @@ services:
       - showdown-engine
 
   worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${WORKER_IMAGE:-ghcr.io/athen-player1/vgc-dashboard-worker:latest}
+    pull_policy: always
     command: python -m app.sim_worker
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/vgc_dashboard
@@ -37,9 +34,8 @@ services:
       - showdown-engine
 
   showdown-engine:
-    build:
-      context: ./showdown-engine
-      dockerfile: Dockerfile
+    image: ${SIM_ENGINE_IMAGE:-ghcr.io/athen-player1/vgc-dashboard-sim-engine:latest}
+    pull_policy: always
 
   db:
     image: postgres:16-alpine
